@@ -6,7 +6,14 @@
 <form method="post" class="form-stack constrained">
   {% csrf_token %}
   {% include 'includes/form_fields.html' %}
+  <div class="assessment-preview" aria-live="polite">
+    {% if form.assessment %}
+      <strong>Risikowert: {{ form.assessment.score }}</strong>
+      <span class="status risk-class-{{ form.assessment.band.code }}">{{ form.assessment.band.label }}</span>
+    {% else %}<span>Keine g&uuml;ltige Bewertung</span>{% endif %}
+  </div>
   <div class="form-actions">
+    <button type="submit" class="button" name="action" value="preview">Bewertung berechnen</button>
     <button type="submit" class="button primary">{% if object %}Speichern{% else %}Risiko anlegen{% endif %}</button>
     {% if object %}<a class="button" href="{% url 'risks:detail' object.pk %}">Abbrechen</a>{% else %}<a class="button" href="{% url 'risks:list' %}">Abbrechen</a>{% endif %}
   </div>

@@ -11,6 +11,10 @@
   <div><dt>In Bearbeitung</dt><dd>{{ counts.in_progress }}</dd></div>
   <div><dt>Geschlossen</dt><dd>{{ counts.closed }}</dd></div>
 </dl>
+<h2>Risikoklassen</h2>
+<dl class="metrics">
+  {% for metric in risk_class_metrics %}<div><dt><span class="status risk-class-{{ metric.band.code }}">{{ metric.band.label }}</span></dt><dd>{{ metric.count }}</dd></div>{% endfor %}
+</dl>
 <section>
   <div class="section-heading"><h2>Zuletzt angelegte Risiken</h2><a href="{% url 'risks:list' %}">Alle Risiken</a></div>
   {% include 'risks/table.html' with risks=recent_risks %}

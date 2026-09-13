@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}{{ measure.title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'risks:detail' risk.pk %}">Zum Risiko</a>
+<div class="page-heading"><h1>{{ measure.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:measure-edit' risk.pk measure.pk %}">Bearbeiten</a>{% endif %}</div>
+<section class="description"><h2>Beschreibung</h2><div class="prose">{{ measure.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div></section>
+<dl class="details">
+  <div><dt>Risiko</dt><dd><a href="{% url 'risks:detail' risk.pk %}">{{ risk.title }}</a></dd></div>
+  <div><dt>Organisation</dt><dd>{{ measure.organization.name }}</dd></div>
+  <div><dt>Status</dt><dd>{{ measure.get_status_display }}</dd></div>
+  <div><dt>Verantwortlich</dt><dd>{% if measure.responsible_user %}{{ measure.responsible_user.get_full_name|default:measure.responsible_user.username }}{% else %}Nicht zugewiesen{% endif %}</dd></div>
+  <div><dt>F&auml;llig am</dt><dd>{{ measure.due_date|date:'d.m.Y'|default:'Nicht festgelegt' }}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ measure.created_at|date:'d.m.Y H:i' }}</dd></div>
+  <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ measure.updated_at|date:'d.m.Y H:i' }}</dd></div>
+</dl>
+{% endblock %}

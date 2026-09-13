@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Ma&szlig;nahme{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'risks:detail' risk.pk %}">Zum Risiko</a>
+<div class="page-heading"><div><div class="eyebrow">{{ risk.title }}</div><h1>{% if object %}Ma&szlig;nahme bearbeiten{% else %}Neue Ma&szlig;nahme{% endif %}</h1></div></div>
+<form method="post" class="form-stack constrained">
+  {% csrf_token %}{% include 'includes/form_fields.html' %}
+  <div class="form-actions"><button type="submit" class="button primary">Speichern</button><a class="button" href="{% url 'risks:detail' risk.pk %}">Abbrechen</a></div>
+</form>
+{% endblock %}

@@ -42,6 +42,7 @@ class TenantTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         data = {
             'title': 'Neues Risiko', 'description': 'Beschreibung', 'status': Risk.Status.OPEN,
+            'likelihood': 3, 'impact': 3, 'treatment_strategy': '',
             'organization_context': response.context['form']['organization_context'].value(),
         }
         data.update(overrides)
