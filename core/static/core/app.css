@@ -1,4 +1,10 @@
 :root { color-scheme: light; --ink: #222a29; --muted: #616c69; --line: #dce2df; --accent: #116858; --surface: #f5f7f6; }
+.status.risk-class-low { color: #1f6550; background: #e4f1e8; }
+.status.risk-class-medium { color: #735706; background: #fff4cc; }
+.status.risk-class-high { color: #943b27; background: #faece6; }
+.status.risk-class-critical { color: #98213b; background: #fce5ec; }
+.details dt { overflow-wrap: anywhere; }
+.assessment-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 * { box-sizing: border-box; letter-spacing: 0; }
 body { margin: 0; font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #fff; }
 a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }

@@ -6,9 +6,29 @@
 {% include 'risks/status.html' %}
 <section class="description"><h2>Beschreibung</h2><div class="prose">{{ risk.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div></section>
 <dl class="details">
+  <div><dt>Eintrittswahrscheinlichkeit</dt><dd>{{ risk.likelihood }} - {{ risk.get_likelihood_display }}</dd></div>
+  <div><dt>Auswirkung</dt><dd>{{ risk.impact }} - {{ risk.get_impact_display }}</dd></div>
+  <div><dt>Risikowert</dt><dd>{{ risk.risk_score }}</dd></div>
+  <div><dt>Risikoklasse</dt><dd>{% include 'risks/assessment.html' %}</dd></div>
+  <div><dt>Behandlungsstrategie</dt><dd>{{ risk.get_treatment_strategy_display|default:'Nicht festgelegt' }}</dd></div>
   <div><dt>Organisation</dt><dd>{{ risk.organization.name }}</dd></div>
   <div><dt>Erstellt von</dt><dd>{{ risk.created_by.get_full_name|default:risk.created_by.username }}</dd></div>
   <div><dt>Erstellt am</dt><dd>{{ risk.created_at|date:'d.m.Y H:i' }}</dd></div>
   <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ risk.updated_at|date:'d.m.Y H:i' }}</dd></div>
 </dl>
+<section class="description">
+  <div class="section-heading"><h2>Ma&szlig;nahmen</h2>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:measure-create' risk.pk %}">Neue Ma&szlig;nahme</a>{% endif %}</div>
+  {% if measures %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Ma&szlig;nahmen">
+    <table><thead><tr><th>Titel</th><th>Status</th><th>Verantwortlich</th><th>F&auml;llig am</th>{% if can_write_risks %}<th>Aktion</th>{% endif %}</tr></thead><tbody>
+    {% for measure in measures %}<tr>
+      <td><a href="{% url 'risks:measure-detail' risk.pk measure.pk %}">{{ measure.title }}</a></td>
+      <td>{{ measure.get_status_display }}</td>
+      <td>{% if measure.responsible_user %}{{ measure.responsible_user.get_full_name|default:measure.responsible_user.username }}{% else %}Nicht zugewiesen{% endif %}</td>
+      <td>{{ measure.due_date|date:'d.m.Y'|default:'Nicht festgelegt' }}</td>
+      {% if can_write_risks %}<td><a href="{% url 'risks:measure-edit' risk.pk measure.pk %}">Bearbeiten</a></td>{% endif %}
+    </tr>{% endfor %}</tbody></table>
+  </div>
+  {% else %}<div class="empty-state">Keine Ma&szlig;nahmen vorhanden</div>{% endif %}
+</section>
 {% endblock %}

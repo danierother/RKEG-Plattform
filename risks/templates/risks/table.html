@@ -1,12 +1,16 @@
 {% if risks %}
 <div class="table-scroll" tabindex="0" role="region" aria-label="Risiken">
   <table>
-    <thead><tr><th scope="col">Titel</th><th scope="col">Status</th><th scope="col">Erstellt von</th><th scope="col">Erstellt am</th><th scope="col">Ge&auml;ndert am</th>{% if can_write_risks %}<th scope="col"><span class="sr-only">Aktionen</span></th>{% endif %}</tr></thead>
+    <thead><tr><th scope="col">Titel</th><th scope="col">Status</th><th scope="col">Eintrittswahrscheinlichkeit</th><th scope="col">Auswirkung</th><th scope="col">Risikowert</th><th scope="col">Risikoklasse</th><th scope="col">Erstellt von</th><th scope="col">Erstellt am</th><th scope="col">Ge&auml;ndert am</th>{% if can_write_risks %}<th scope="col"><span class="sr-only">Aktionen</span></th>{% endif %}</tr></thead>
     <tbody>
       {% for risk in risks %}
       <tr>
         <td class="title-cell"><a href="{% url 'risks:detail' risk.pk %}">{{ risk.title }}</a></td>
         <td>{% include 'risks/status.html' %}</td>
+        <td>{{ risk.likelihood }} - {{ risk.get_likelihood_display }}</td>
+        <td>{{ risk.impact }} - {{ risk.get_impact_display }}</td>
+        <td>{{ risk.risk_score }}</td>
+        <td>{% include 'risks/assessment.html' %}</td>
         <td>{{ risk.created_by.get_full_name|default:risk.created_by.username }}</td>
         <td class="date-cell">{{ risk.created_at|date:'d.m.Y H:i' }}</td>
         <td class="date-cell">{{ risk.updated_at|date:'d.m.Y H:i' }}</td>
