@@ -5,7 +5,7 @@
     <tbody>
       {% for risk in risks %}
       <tr>
-        <td class="title-cell"><a href="{% url 'risks:detail' risk.pk %}">{{ risk.title }}</a></td>
+        <td class="title-cell"><a href="{% url 'risks:detail' risk.pk %}{% if register_query %}?register={{ register_query|urlencode }}{% endif %}">{{ risk.title }}</a></td>
         <td>{% include 'risks/status.html' %}</td>
         <td>{{ risk.likelihood }} - {{ risk.get_likelihood_display }}</td>
         <td>{{ risk.impact }} - {{ risk.get_impact_display }}</td>
@@ -14,7 +14,7 @@
         <td>{{ risk.created_by.get_full_name|default:risk.created_by.username }}</td>
         <td class="date-cell">{{ risk.created_at|date:'d.m.Y H:i' }}</td>
         <td class="date-cell">{{ risk.updated_at|date:'d.m.Y H:i' }}</td>
-        {% if can_write_risks %}<td><a href="{% url 'risks:edit' risk.pk %}" aria-label="{{ risk.title }} bearbeiten">Bearbeiten</a></td>{% endif %}
+        {% if can_write_risks %}<td><a href="{% url 'risks:edit' risk.pk %}{% if register_query %}?register={{ register_query|urlencode }}{% endif %}" aria-label="{{ risk.title }} bearbeiten">Bearbeiten</a></td>{% endif %}
       </tr>
       {% endfor %}
     </tbody>

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Risikomatrix{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>Risikomatrix</h1></div><a class="button" href="{% url 'risks:list' %}">Risikoregister</a></div>
+<div class="matrix-scroll" tabindex="0" role="region" aria-label="5 mal 5 Risikomatrix">
+  <table class="risk-matrix">
+    <caption>Eintrittswahrscheinlichkeit &times; Auswirkung</caption>
+    <thead><tr><th scope="col">Eintrittswahrscheinlichkeit</th>{% for value, label in impact_choices %}<th scope="col">{{ value }}<br>{{ label }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in matrix_rows %}<tr>
+      <th scope="row">{{ row.likelihood }}<br>{{ row.label }}</th>
+      {% for cell in row.cells %}<td class="matrix-cell risk-class-{{ cell.band.code }}" data-likelihood="{{ cell.likelihood }}" data-impact="{{ cell.impact }}">
+        <div class="matrix-score">{{ cell.score }} <span>{{ cell.band.label }}</span></div>
+        {% if cell.count %}<details><summary>{{ cell.count }} {% if cell.count == 1 %}Risiko{% else %}Risiken{% endif %}</summary><ul>{% for risk in cell.risks %}<li><a href="{% url 'risks:detail' risk.pk %}">{{ risk.title }}</a></li>{% endfor %}</ul></details>{% else %}<div class="matrix-empty">0 Risiken</div>{% endif %}
+      </td>{% endfor %}
+    </tr>{% endfor %}</tbody>
+    <tfoot><tr><td></td><th colspan="5" scope="colgroup">Auswirkung</th></tr></tfoot>
+  </table>
+</div>
+{% endblock %}

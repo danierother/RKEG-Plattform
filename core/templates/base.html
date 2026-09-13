@@ -26,7 +26,8 @@
       {% if memberships|length > 1 %}<a class="switch-link" href="{% url 'organizations:select' %}">Organisation wechseln</a>{% endif %}
       <nav aria-label="Hauptnavigation">
         <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>Dashboard</a>
-        <a href="{% url 'risks:list' %}" {% if request.resolver_match.app_name == 'risks' %}aria-current="page"{% endif %}>Risikoregister</a>
+        <a href="{% url 'risks:list' %}" {% if request.resolver_match.app_name == 'risks' and request.resolver_match.url_name != 'matrix' %}aria-current="page"{% endif %}>Risikoregister</a>
+        <a href="{% url 'risks:matrix' %}" {% if request.resolver_match.url_name == 'matrix' %}aria-current="page"{% endif %}>Risikomatrix</a>
         <a href="{% url 'organizations:detail' %}" {% if request.resolver_match.app_name == 'organizations' %}aria-current="page"{% endif %}>Organisation</a>
       </nav>
       <div class="sidebar-footer">Resilienzmanagement</div>
