@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from organizations.models import Membership, Organization
 from risks.models import Risk
+from .test_helpers import TenantTestCase
 
 
 class AdminAccessTests(TestCase):
@@ -52,3 +53,36 @@ class AdminAccessTests(TestCase):
         for model in self.models:
             name = f'admin:{model._meta.app_label}_{model._meta.model_name}_changelist'
             self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+
+
+class DashboardTests(TenantTestCase):
+    def test_dashboard_counts_only_active_organization(self):
+        Risk.objects.create(title='Abgeschlossen', status=Risk.Status.CLOSED,
+                            organization=self.organization, created_by=self.user)
+        Risk.objects.create(title='In Arbeit', status=Risk.Status.IN_PROGRESS,
+                            organization=self.organization, created_by=self.user)
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.context['counts'], {'total': 3, 'open': 1, 'in_progress': 1, 'closed': 1})
+        self.assertContains(response, self.risk.title)
+        self.assertNotContains(response, self.other_risk.title)
+        self.assertIn('no-store', response.headers['Cache-Control'])
+
+    def test_latest_five_risks_are_newest_first(self):
+        created = [Risk.objects.create(title=f'Risiko {index}', organization=self.organization,
+                                      created_by=self.user) for index in range(6)]
+        response = self.client.get('/dashboard/')
+        self.assertEqual(list(response.context['recent_risks']), list(reversed(created))[:5])
+
+    def test_dashboard_switches_counts(self):
+        Membership.objects.create(user=self.user, organization=self.other_organization)
+        self.select_organization(self.other_organization)
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.context['counts']['total'], 1)
+        self.assertContains(response, self.other_risk.title)
+        self.assertNotContains(response, self.risk.title)
+
+    def test_empty_dashboard(self):
+        self.risk.delete()
+        response = self.client.get('/')
+        self.assertEqual(response.context['counts'], {'total': 0, 'open': 0, 'in_progress': 0, 'closed': 0})
+        self.assertContains(response, 'Keine Risiken vorhanden')

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Organisation{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Organisation</h1>{% if memberships|length > 1 %}<a class="button" href="{% url 'organizations:select' %}">Organisation wechseln</a>{% endif %}</div>
+<h2>{{ active_organization.name }}</h2>
+<dl class="details">
+  <div><dt>Name</dt><dd>{{ active_organization.name }}</dd></div>
+  <div><dt>Rechtlicher Name</dt><dd>{{ active_organization.legal_name|default:'Nicht hinterlegt' }}</dd></div>
+  <div><dt>Ihre Rolle</dt><dd>{{ active_membership.get_role_display }}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ active_organization.created_at|date:'d.m.Y H:i' }}</dd></div>
+</dl>
+{% endblock %}

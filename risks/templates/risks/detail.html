@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{{ risk.title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'risks:list' %}">Zum Risikoregister</a>
+<div class="page-heading"><h1>{{ risk.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:edit' risk.pk %}">Bearbeiten</a>{% endif %}</div>
+{% include 'risks/status.html' %}
+<section class="description"><h2>Beschreibung</h2><div class="prose">{{ risk.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div></section>
+<dl class="details">
+  <div><dt>Organisation</dt><dd>{{ risk.organization.name }}</dd></div>
+  <div><dt>Erstellt von</dt><dd>{{ risk.created_by.get_full_name|default:risk.created_by.username }}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ risk.created_at|date:'d.m.Y H:i' }}</dd></div>
+  <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ risk.updated_at|date:'d.m.Y H:i' }}</dd></div>
+</dl>
+{% endblock %}

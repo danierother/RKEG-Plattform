@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Risiko bearbeiten{% else %}Neues Risiko{% endif %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'risks:list' %}">Zum Risikoregister</a>
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>{% if object %}Risiko bearbeiten{% else %}Neues Risiko{% endif %}</h1></div></div>
+<form method="post" class="form-stack constrained">
+  {% csrf_token %}
+  {% include 'includes/form_fields.html' %}
+  <div class="form-actions">
+    <button type="submit" class="button primary">{% if object %}Speichern{% else %}Risiko anlegen{% endif %}</button>
+    {% if object %}<a class="button" href="{% url 'risks:detail' object.pk %}">Abbrechen</a>{% else %}<a class="button" href="{% url 'risks:list' %}">Abbrechen</a>{% endif %}
+  </div>
+</form>
+{% endblock %}

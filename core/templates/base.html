@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RKEG-Plattform{% endblock %} | RKEG</title>
+  <link rel="icon" href="{% static 'core/brand.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'core/app.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt</a>
+  <header class="header">
+    <a class="brand" href="{% url 'dashboard' %}"><img src="{% static 'core/brand.svg' %}" width="32" height="32" alt="">RKEG<span>Plattform</span></a>
+    {% if user.is_authenticated %}
+      <div class="account"><span>{{ user.get_full_name|default:user.username }}</span>
+        <form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button class="text-button" type="submit">Logout</button></form>
+      </div>
+    {% endif %}
+  </header>
+  {% if user.is_authenticated %}
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="organization-label">Organisation</div>
+      <div class="organization-name">{% if active_organization %}{{ active_organization.name }}{% else %}Keine Organisation ausgew&auml;hlt{% endif %}</div>
+      {% if memberships|length > 1 %}<a class="switch-link" href="{% url 'organizations:select' %}">Organisation wechseln</a>{% endif %}
+      <nav aria-label="Hauptnavigation">
+        <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>Dashboard</a>
+        <a href="{% url 'risks:list' %}" {% if request.resolver_match.app_name == 'risks' %}aria-current="page"{% endif %}>Risikoregister</a>
+        <a href="{% url 'organizations:detail' %}" {% if request.resolver_match.app_name == 'organizations' %}aria-current="page"{% endif %}>Organisation</a>
+      </nav>
+      <div class="sidebar-footer">Resilienzmanagement</div>
+    </aside>
+  {% endif %}
+    <main id="main" class="{% if user.is_authenticated %}main{% else %}public-main{% endif %}">
+      {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  {% if user.is_authenticated %}</div>{% endif %}
+</body>
+</html>
