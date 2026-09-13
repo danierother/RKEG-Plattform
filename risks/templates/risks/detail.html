@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}{{ risk.title }}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% url 'risks:list' %}">Zum Risikoregister</a>
-<div class="page-heading"><h1>{{ risk.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:edit' risk.pk %}">Bearbeiten</a>{% endif %}</div>
+<a class="back-link" href="{% url 'risks:list' %}{% if register_query %}?{{ register_query }}{% endif %}">Zum Risikoregister</a>
+<div class="page-heading"><h1>{{ risk.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:edit' risk.pk %}{% if register_query %}?register={{ register_query|urlencode }}{% endif %}">Bearbeiten</a>{% endif %}</div>
 {% include 'risks/status.html' %}
 <section class="description"><h2>Beschreibung</h2><div class="prose">{{ risk.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div></section>
 <dl class="details">

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{% if object %}Risiko bearbeiten{% else %}Neues Risiko{% endif %}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% url 'risks:list' %}">Zum Risikoregister</a>
+<a class="back-link" href="{% url 'risks:list' %}{% if register_query %}?{{ register_query }}{% endif %}">Zum Risikoregister</a>
 <div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>{% if object %}Risiko bearbeiten{% else %}Neues Risiko{% endif %}</h1></div></div>
 <form method="post" class="form-stack constrained">
   {% csrf_token %}
@@ -15,7 +15,7 @@
   <div class="form-actions">
     <button type="submit" class="button" name="action" value="preview">Bewertung berechnen</button>
     <button type="submit" class="button primary">{% if object %}Speichern{% else %}Risiko anlegen{% endif %}</button>
-    {% if object %}<a class="button" href="{% url 'risks:detail' object.pk %}">Abbrechen</a>{% else %}<a class="button" href="{% url 'risks:list' %}">Abbrechen</a>{% endif %}
+    {% if object %}<a class="button" href="{% url 'risks:detail' object.pk %}{% if register_query %}?register={{ register_query|urlencode }}{% endif %}">Abbrechen</a>{% else %}<a class="button" href="{% url 'risks:list' %}">Abbrechen</a>{% endif %}
   </div>
 </form>
 {% endblock %}

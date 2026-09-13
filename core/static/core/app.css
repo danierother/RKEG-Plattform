@@ -1,4 +1,23 @@
 :root { color-scheme: light; --ink: #222a29; --muted: #616c69; --line: #dce2df; --accent: #116858; --surface: #f5f7f6; }
+.risk-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 16px; padding-block: 20px; margin-bottom: 24px; border-block: 1px solid var(--line); }
+.filter-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.matrix-scroll { overflow-x: auto; }
+.risk-matrix { table-layout: fixed; min-width: 1050px; }
+.risk-matrix caption { text-align: left; font-weight: 600; padding-bottom: 16px; }
+.risk-matrix th, .risk-matrix td { overflow-wrap: anywhere; min-width: 0; padding: 12px; border: 3px solid white; }
+.risk-matrix tbody tr { height: 145px; }
+.risk-matrix .matrix-cell { vertical-align: top; }
+.matrix-cell.risk-class-low { background: #e4f1e8; color: #1f6550; }
+.matrix-cell.risk-class-medium { background: #fff4cc; color: #735706; }
+.matrix-cell.risk-class-high { background: #faece6; color: #943b27; }
+.matrix-cell.risk-class-critical { background: #fce5ec; color: #98213b; }
+.matrix-score { font-size: 24px; font-weight: 650; }
+.matrix-score span { display: block; font-size: 13px; font-weight: 550; }
+.matrix-cell summary { cursor: pointer; margin-top: 12px; font-size: 13px; }
+.matrix-cell ul { padding-left: 18px; margin-bottom: 0; max-height: 220px; overflow-y: auto; }
+.matrix-cell li { margin-block: 8px; }
+.matrix-cell a { color: inherit; }
+.matrix-empty { margin-top: 12px; font-size: 13px; }
 .status.risk-class-low { color: #1f6550; background: #e4f1e8; }
 .status.risk-class-medium { color: #735706; background: #fff4cc; }
 .status.risk-class-high { color: #943b27; background: #faece6; }
