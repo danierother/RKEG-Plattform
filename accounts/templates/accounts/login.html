@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<section class="login">
+  <div class="eyebrow">Resilienzmanagement</div>
+  <h1>RKEG-Plattform</h1>
+  <h2>Anmelden</h2>
+  <form method="post" class="form-stack">
+    {% csrf_token %}
+    {% include 'includes/form_fields.html' %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="button primary">Anmelden</button>
+  </form>
+</section>
+{% endblock %}

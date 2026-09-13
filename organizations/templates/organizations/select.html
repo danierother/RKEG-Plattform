@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Organisation ausw&auml;hlen{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Organisation ausw&auml;hlen</h1></div>
+{% if memberships %}
+<form method="post" class="form-stack constrained">
+  {% csrf_token %}
+  {% include 'includes/form_fields.html' %}
+  <div class="form-actions"><button type="submit" class="button primary">Organisation &ouml;ffnen</button></div>
+</form>
+{% else %}
+<div class="empty-state"><h2>Keine aktive Mitgliedschaft</h2><p>Bitte wenden Sie sich an Ihre Organisationsadministration.</p></div>
+{% endif %}
+{% endblock %}

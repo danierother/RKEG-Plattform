@@ -1,0 +1,1 @@
+<span class="status status-{{ risk.status|lower }}">{% if risk.status == 'OPEN' %}Offen{% elif risk.status == 'IN_PROGRESS' %}In Bearbeitung{% elif risk.status == 'CLOSED' %}Geschlossen{% else %}{{ risk.get_status_display }}{% endif %}</span>

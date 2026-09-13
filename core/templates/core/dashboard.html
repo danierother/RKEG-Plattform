@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><div class="eyebrow">{{ active_organization.name }}</div><h1>Dashboard</h1></div>
+  {% if can_write_risks %}<a class="button primary" href="{% url 'risks:create' %}">Neues Risiko</a>{% endif %}
+</div>
+<dl class="metrics">
+  <div><dt>Risiken gesamt</dt><dd>{{ counts.total }}</dd></div>
+  <div><dt>Offen</dt><dd>{{ counts.open }}</dd></div>
+  <div><dt>In Bearbeitung</dt><dd>{{ counts.in_progress }}</dd></div>
+  <div><dt>Geschlossen</dt><dd>{{ counts.closed }}</dd></div>
+</dl>
+<section>
+  <div class="section-heading"><h2>Zuletzt angelegte Risiken</h2><a href="{% url 'risks:list' %}">Alle Risiken</a></div>
+  {% include 'risks/table.html' with risks=recent_risks %}
+</section>
+{% endblock %}
