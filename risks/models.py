@@ -96,8 +96,9 @@ class Risk(models.Model):
         if self.pk and (
             self.measures.exclude(organization_id=self.organization_id).exists()
             or self.controls.exclude(organization_id=self.organization_id).exists()
+            or self.incidents.exclude(organization_id=self.organization_id).exists()
         ):
-            raise ValidationError({'organization': 'Risiken mit Massnahmen oder Kontrollen koennen die Organisation nicht wechseln.'})
+            raise ValidationError({'organization': 'Risiken mit Massnahmen, Kontrollen oder Vorfaellen koennen die Organisation nicht wechseln.'})
 
     def save(self, *args, **kwargs):
         self.clean()

@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from organizations.mixins import OrganizationContextMixin
 from risks.models import Risk
 from risks.assessment import DEFAULT_RISK_BANDS, score_expression
+from incidents.models import Incident
 
 
 class DashboardView(OrganizationContextMixin, TemplateView):
@@ -35,4 +36,11 @@ class DashboardView(OrganizationContextMixin, TemplateView):
         context['residual_risk_class_metrics'] = [
             {'band': band, 'count': residual_counts[band.code]} for band in DEFAULT_RISK_BANDS
         ]
+        incidents = self.organization.incidents.all()
+        context['incident_counts'] = incidents.aggregate(
+            open=Count('pk', filter=Q(status__in=Incident.OPEN_STATUSES)),
+            critical=Count('pk', filter=Q(severity=Incident.Severity.CRITICAL)),
+            under_review=Count('pk', filter=Q(reporting_status=Incident.ReportingStatus.UNDER_REVIEW)),
+        )
+        context['recent_incidents'] = incidents.select_related('responsible_user').order_by('-created_at', '-pk')[:5]
         return context

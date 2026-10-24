@@ -1,0 +1,15 @@
+{% if incidents %}
+<div class="table-scroll" tabindex="0" role="region" aria-label="Vorf&auml;lle">
+<table><thead><tr><th scope="col">Titel</th><th scope="col">Schweregrad</th><th scope="col">Status</th><th scope="col">Vorfallart</th><th scope="col">Ereigniszeit</th><th scope="col">Meldepr&uuml;fung</th><th scope="col">Verantwortlich</th><th scope="col">Ge&auml;ndert am</th></tr></thead><tbody>
+{% for incident in incidents %}<tr>
+  <td class="title-cell"><a href="{% url 'incidents:detail' incident.pk %}{% if incident_query %}?register={{ incident_query|urlencode }}{% endif %}">{{ incident.title }}</a></td>
+  <td>{% include 'incidents/severity.html' %}</td>
+  <td>{{ incident.get_status_display }}</td>
+  <td>{{ incident.get_incident_type_display }}</td>
+  <td class="date-cell">{{ incident.occurred_at|date:'d.m.Y H:i' }}</td>
+  <td>{{ incident.get_reporting_status_display }}</td>
+  <td>{% if incident.responsible_user %}{{ incident.responsible_user.get_full_name|default:incident.responsible_user.username }}{% else %}Nicht zugewiesen{% endif %}</td>
+  <td class="date-cell">{{ incident.updated_at|date:'d.m.Y H:i' }}</td>
+</tr>{% endfor %}
+</tbody></table></div>
+{% else %}<div class="empty-state"><h3>Keine Vorf&auml;lle vorhanden</h3></div>{% endif %}
