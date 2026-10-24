@@ -4,18 +4,36 @@
 <a class="back-link" href="{% url 'risks:list' %}{% if register_query %}?{{ register_query }}{% endif %}">Zum Risikoregister</a>
 <div class="page-heading"><h1>{{ risk.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:edit' risk.pk %}{% if register_query %}?register={{ register_query|urlencode }}{% endif %}">Bearbeiten</a>{% endif %}</div>
 {% include 'risks/status.html' %}
-<section class="description"><h2>Beschreibung</h2><div class="prose">{{ risk.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div></section>
+<section class="description"><h2>Risikobeschreibung</h2><div class="prose">{{ risk.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div>
+<h3>Risikoquelle / Ursache</h3><div class="prose">{{ risk.risk_source|default:'Nicht hinterlegt.'|linebreaksbr }}</div>
+<h3>M&ouml;gliche Auswirkungen</h3><div class="prose">{{ risk.potential_impact|default:'Nicht hinterlegt.'|linebreaksbr }}</div></section>
+<section class="description"><h2>Bruttorisiko</h2>
 <dl class="details">
-  <div><dt>Eintrittswahrscheinlichkeit</dt><dd>{{ risk.likelihood }} - {{ risk.get_likelihood_display }}</dd></div>
-  <div><dt>Auswirkung</dt><dd>{{ risk.impact }} - {{ risk.get_impact_display }}</dd></div>
-  <div><dt>Risikowert</dt><dd>{{ risk.risk_score }}</dd></div>
-  <div><dt>Risikoklasse</dt><dd>{% include 'risks/assessment.html' %}</dd></div>
-  <div><dt>Behandlungsstrategie</dt><dd>{{ risk.get_treatment_strategy_display|default:'Nicht festgelegt' }}</dd></div>
-  <div><dt>Organisation</dt><dd>{{ risk.organization.name }}</dd></div>
-  <div><dt>Erstellt von</dt><dd>{{ risk.created_by.get_full_name|default:risk.created_by.username }}</dd></div>
-  <div><dt>Erstellt am</dt><dd>{{ risk.created_at|date:'d.m.Y H:i' }}</dd></div>
-  <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ risk.updated_at|date:'d.m.Y H:i' }}</dd></div>
-</dl>
+  <div><dt>Brutto-Wahrscheinlichkeit</dt><dd>{{ risk.likelihood }} - {{ risk.get_likelihood_display }}</dd></div>
+  <div><dt>Brutto-Auswirkung</dt><dd>{{ risk.impact }} - {{ risk.get_impact_display }}</dd></div>
+  <div><dt>Bruttorisikowert</dt><dd>{{ risk.risk_score }}</dd></div>
+  <div><dt>Bruttorisikoklasse</dt><dd>{% include 'risks/assessment.html' %}</dd></div>
+</dl></section>
+<section class="description">
+  <div class="section-heading"><h2>Bestehende Kontrollen</h2>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:control-create' risk.pk %}">Neue Kontrolle</a>{% endif %}</div>
+  {% if controls %}<div class="table-scroll" tabindex="0" role="region" aria-label="Bestehende Kontrollen">
+  <table><thead><tr><th scope="col">Titel</th><th scope="col">Kontrolltyp</th><th scope="col">Wirksamkeit</th><th scope="col">Verantwortlich</th>{% if can_write_risks %}<th scope="col">Aktion</th>{% endif %}</tr></thead><tbody>
+    {% for control in controls %}<tr>
+      <td><a href="{% url 'risks:control-detail' risk.pk control.pk %}">{{ control.title }}</a></td>
+      <td>{{ control.get_control_type_display|default:'Nicht festgelegt' }}</td>
+      <td>{{ control.effectiveness }} - {{ control.get_effectiveness_display }}</td>
+      <td>{% if control.responsible_user %}{{ control.responsible_user.get_full_name|default:control.responsible_user.username }}{% else %}Nicht zugewiesen{% endif %}</td>
+      {% if can_write_risks %}<td><a href="{% url 'risks:control-edit' risk.pk control.pk %}">Bearbeiten</a></td>{% endif %}
+    </tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty-state">Keine Kontrollen vorhanden</div>{% endif %}
+</section>
+<section class="description"><h2>Restrisiko</h2><dl class="details">
+  <div><dt>Restrisiko-Wahrscheinlichkeit</dt><dd>{{ risk.residual_likelihood }} - {{ risk.get_residual_likelihood_display }}</dd></div>
+  <div><dt>Restrisiko-Auswirkung</dt><dd>{{ risk.residual_impact }} - {{ risk.get_residual_impact_display }}</dd></div>
+  <div><dt>Restrisikowert</dt><dd>{{ risk.residual_risk_score }}</dd></div>
+  <div><dt>Restrisikoklasse</dt><dd><span class="status risk-class-{{ risk.residual_risk_class.code }}">{{ risk.residual_risk_class.label }}</span></dd></div>
+</dl></section>
+<section class="description"><h2>Behandlungsstrategie</h2><p>{{ risk.get_treatment_strategy_display|default:'Nicht festgelegt' }}</p></section>
 <section class="description">
   <div class="section-heading"><h2>Ma&szlig;nahmen</h2>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:measure-create' risk.pk %}">Neue Ma&szlig;nahme</a>{% endif %}</div>
   {% if measures %}
@@ -31,4 +49,10 @@
   </div>
   {% else %}<div class="empty-state">Keine Ma&szlig;nahmen vorhanden</div>{% endif %}
 </section>
+<dl class="details">
+  <div><dt>Organisation</dt><dd>{{ risk.organization.name }}</dd></div>
+  <div><dt>Erstellt von</dt><dd>{{ risk.created_by.get_full_name|default:risk.created_by.username }}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ risk.created_at|date:'d.m.Y H:i' }}</dd></div>
+  <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ risk.updated_at|date:'d.m.Y H:i' }}</dd></div>
+</dl>
 {% endblock %}

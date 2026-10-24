@@ -11,9 +11,13 @@
   <div><dt>In Bearbeitung</dt><dd>{{ counts.in_progress }}</dd></div>
   <div><dt>Geschlossen</dt><dd>{{ counts.closed }}</dd></div>
 </dl>
-<div class="section-heading"><h2>Risikoklassen</h2><a class="button" href="{% url 'risks:matrix' %}">Risikomatrix anzeigen</a></div>
+<div class="section-heading"><h2>Bruttorisiken nach Klasse</h2><a class="button" href="{% url 'risks:matrix' %}?type=gross">Risikomatrix anzeigen</a></div>
 <dl class="metrics">
   {% for metric in risk_class_metrics %}<div><dt><span class="status risk-class-{{ metric.band.code }}">{{ metric.band.label }}</span></dt><dd>{{ metric.count }}</dd></div>{% endfor %}
+</dl>
+<div class="section-heading"><h2>Restrisiken nach Klasse</h2><a class="button" href="{% url 'risks:matrix' %}?type=residual">Restrisikomatrix anzeigen</a></div>
+<dl class="metrics">
+  {% for metric in residual_risk_class_metrics %}<div><dt><span class="status risk-class-{{ metric.band.code }}">{{ metric.band.label }}</span></dt><dd>{{ metric.count }}</dd></div>{% endfor %}
 </dl>
 <section>
   <div class="section-heading"><h2>Zuletzt angelegte Risiken</h2><a href="{% url 'risks:list' %}">Alle Risiken</a></div>

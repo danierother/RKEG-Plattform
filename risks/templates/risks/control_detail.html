@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}{{ control.title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'risks:detail' risk.pk %}">Zum Risiko</a>
+<div class="page-heading"><h1>{{ control.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:control-edit' risk.pk control.pk %}">Bearbeiten</a>{% endif %}</div>
+<section class="description"><h2>Beschreibung</h2><div class="prose">{{ control.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div></section>
+<dl class="details">
+  <div><dt>Risiko</dt><dd><a href="{% url 'risks:detail' risk.pk %}">{{ risk.title }}</a></dd></div>
+  <div><dt>Organisation</dt><dd>{{ control.organization.name }}</dd></div>
+  <div><dt>Kontrolltyp</dt><dd>{{ control.get_control_type_display|default:'Nicht festgelegt' }}</dd></div>
+  <div><dt>Wirksamkeit</dt><dd>{{ control.effectiveness }} - {{ control.get_effectiveness_display }}</dd></div>
+  <div><dt>Verantwortlich</dt><dd>{% if control.responsible_user %}{{ control.responsible_user.get_full_name|default:control.responsible_user.username }}{% else %}Nicht zugewiesen{% endif %}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ control.created_at|date:'d.m.Y H:i' }}</dd></div>
+  <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ control.updated_at|date:'d.m.Y H:i' }}</dd></div>
+</dl>
+{% endblock %}

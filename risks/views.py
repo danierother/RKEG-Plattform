@@ -5,8 +5,8 @@ from django.urls import reverse
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from organizations.mixins import OrganizationQuerysetMixin, RiskWritePermissionMixin
-from .forms import RiskForm, RiskMeasureForm
-from .models import Risk, RiskMeasure
+from .forms import RiskForm, RiskMeasureForm, RiskControlForm
+from .models import Risk, RiskMeasure, RiskControl
 from .filters import RiskFilterForm
 from .assessment import calculate_score, classify_score
 
@@ -34,13 +34,18 @@ class RiskMatrixView(OrganizationQuerysetMixin, ListView):
     template_name = 'risks/matrix.html'
 
     def get_queryset(self):
-        return super().get_queryset().only('id', 'title', 'likelihood', 'impact').order_by('title', 'pk')
+        self.matrix_type = 'residual' if self.request.GET.get('type') == 'residual' else 'gross'
+        self.field_prefix = 'residual_' if self.matrix_type == 'residual' else ''
+        return super().get_queryset().only(
+            'id', 'title', f'{self.field_prefix}likelihood', f'{self.field_prefix}impact',
+        ).order_by('title', 'pk')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         groups = {(likelihood, impact): [] for likelihood in range(1, 6) for impact in range(1, 6)}
         for risk in self.object_list:
-            groups[(risk.likelihood, risk.impact)].append(risk)
+            groups[(getattr(risk, f'{self.field_prefix}likelihood'),
+                    getattr(risk, f'{self.field_prefix}impact'))].append(risk)
         rows = []
         for likelihood, label in reversed(Risk.Likelihood.choices):
             cells = []
@@ -50,7 +55,9 @@ class RiskMatrixView(OrganizationQuerysetMixin, ListView):
                 cells.append({'likelihood': likelihood, 'impact': impact, 'score': score,
                               'band': classify_score(score), 'risks': risks, 'count': len(risks)})
             rows.append({'likelihood': likelihood, 'label': label, 'cells': cells})
-        context.update(matrix_rows=rows, impact_choices=Risk.Impact.choices)
+        context.update(matrix_rows=rows, impact_choices=Risk.Impact.choices,
+                       matrix_type=self.matrix_type,
+                       matrix_title='Restrisikomatrix' if self.matrix_type == 'residual' else 'Bruttorisikomatrix')
         return context
 
 
@@ -66,6 +73,9 @@ class RiskDetailView(OrganizationQuerysetMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['register_query'] = self.request.GET.get('register', '')
         context['measures'] = self.object.measures.filter(
+            organization=self.organization,
+        ).select_related('responsible_user').order_by('-created_at', '-pk')
+        context['controls'] = self.object.controls.filter(
             organization=self.organization,
         ).select_related('responsible_user').order_by('-created_at', '-pk')
         return context
@@ -153,3 +163,23 @@ class RiskMeasureDetailView(RiskMeasureParentMixin, DetailView):
     model = RiskMeasure
     template_name = 'risks/measure_detail.html'
     context_object_name = 'measure'
+
+
+class RiskControlFormMixin(RiskMeasureFormMixin):
+    model = RiskControl
+    form_class = RiskControlForm
+    template_name = 'risks/control_form.html'
+
+
+class RiskControlCreateView(RiskMeasureParentMixin, RiskWritePermissionMixin, RiskControlFormMixin, CreateView):
+    pass
+
+
+class RiskControlUpdateView(RiskMeasureParentMixin, RiskWritePermissionMixin, RiskControlFormMixin, UpdateView):
+    pass
+
+
+class RiskControlDetailView(RiskMeasureParentMixin, DetailView):
+    model = RiskControl
+    template_name = 'risks/control_detail.html'
+    context_object_name = 'control'

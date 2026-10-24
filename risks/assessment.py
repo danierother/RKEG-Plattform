@@ -22,8 +22,9 @@ DEFAULT_RISK_BANDS = (
 )
 
 
-def score_expression():
-    return F('likelihood') * F('impact')
+def score_expression(*, residual=False):
+    prefix = 'residual_' if residual else ''
+    return F(f'{prefix}likelihood') * F(f'{prefix}impact')
 
 
 def calculate_score(likelihood, impact):

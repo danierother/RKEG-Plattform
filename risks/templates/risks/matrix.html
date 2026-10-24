@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Risikomatrix{% endblock %}
+{% block title %}{{ matrix_title }}{% endblock %}
 {% block content %}
-<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>Risikomatrix</h1></div><a class="button" href="{% url 'risks:list' %}">Risikoregister</a></div>
-<div class="matrix-scroll" tabindex="0" role="region" aria-label="5 mal 5 Risikomatrix">
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>{{ matrix_title }}</h1></div><a class="button" href="{% url 'risks:list' %}">Risikoregister</a></div>
+<nav class="assessment-modes" aria-label="Bewertungsart">
+  <a href="?type=gross" {% if matrix_type == 'gross' %}aria-current="page"{% endif %}>Bruttorisiko</a>
+  <a href="?type=residual" {% if matrix_type == 'residual' %}aria-current="page"{% endif %}>Restrisiko</a>
+</nav>
+<div class="matrix-scroll" tabindex="0" role="region" aria-label="{{ matrix_title }}">
   <table class="risk-matrix">
-    <caption>Eintrittswahrscheinlichkeit &times; Auswirkung</caption>
+    <caption>{{ matrix_title }}: Wahrscheinlichkeit &times; Auswirkung</caption>
     <thead><tr><th scope="col">Eintrittswahrscheinlichkeit</th>{% for value, label in impact_choices %}<th scope="col">{{ value }}<br>{{ label }}</th>{% endfor %}</tr></thead>
     <tbody>{% for row in matrix_rows %}<tr>
       <th scope="row">{{ row.likelihood }}<br>{{ row.label }}</th>

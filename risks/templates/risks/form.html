@@ -5,13 +5,19 @@
 <div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>{% if object %}Risiko bearbeiten{% else %}Neues Risiko{% endif %}</h1></div></div>
 <form method="post" class="form-stack constrained">
   {% csrf_token %}
-  {% include 'includes/form_fields.html' %}
-  <div class="assessment-preview" aria-live="polite">
-    {% if form.assessment %}
-      <strong>Risikowert: {{ form.assessment.score }}</strong>
-      <span class="status risk-class-{{ form.assessment.band.code }}">{{ form.assessment.band.label }}</span>
-    {% else %}<span>Keine g&uuml;ltige Bewertung</span>{% endif %}
-  </div>
+  {% if form.errors %}<div class="error-summary" role="alert"><strong>Bitte pr&uuml;fen Sie Ihre Eingaben.</strong>{{ form.non_field_errors }}{% for field in form.hidden_fields %}{{ field.errors }}{% endfor %}</div>{% endif %}
+  {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+  {% for section in form.sections %}
+  <fieldset class="risk-section">
+    <legend>{{ section.title }}</legend>
+    {% for field in section.fields %}<div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+    {% if section.assessment_label %}
+    <div class="assessment-preview" aria-live="polite">
+      {% if section.assessment %}<strong>{{ section.assessment_label }}: {{ section.assessment.score }}</strong><span class="status risk-class-{{ section.assessment.band.code }}">{{ section.assessment.band.label }}</span>{% else %}<span>Keine g&uuml;ltige Bewertung</span>{% endif %}
+    </div>
+    {% endif %}
+  </fieldset>
+  {% endfor %}
   <div class="form-actions">
     <button type="submit" class="button" name="action" value="preview">Bewertung berechnen</button>
     <button type="submit" class="button primary">{% if object %}Speichern{% else %}Risiko anlegen{% endif %}</button>
