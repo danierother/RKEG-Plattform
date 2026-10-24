@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Neuer Chronologieeintrag{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'incidents:detail' incident.pk %}">Zum Vorfall</a>
+<div class="page-heading"><div><div class="eyebrow">{{ incident.title }}</div><h1>Neuer Chronologieeintrag</h1></div></div>
+<form method="post" class="form-stack constrained">{% csrf_token %}{% include 'includes/form_fields.html' %}
+  <div class="form-actions"><button type="submit" class="button primary">Eintrag speichern</button><a class="button" href="{% url 'incidents:detail' incident.pk %}">Abbrechen</a></div>
+</form>
+{% endblock %}

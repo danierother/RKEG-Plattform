@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Vorf&auml;lle{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>Vorf&auml;lle</h1></div>{% if can_write_incidents %}<a class="button primary" href="{% url 'incidents:create' %}">Neuer Vorfall</a>{% endif %}</div>
+<form method="get" class="risk-filters">
+  {% for field in filter_form %}<div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+  <div class="filter-actions"><button type="submit" class="button primary">Anwenden</button><a class="button" href="{% url 'incidents:list' %}">Filter zur&uuml;cksetzen</a></div>
+</form>
+<div class="section-heading"><h2>Vorf&auml;lle <span class="muted">({{ paginator.count }})</span></h2></div>
+{% include 'incidents/table.html' %}
+{% if is_paginated %}<nav class="pagination" aria-label="Seitennavigation">
+  {% if page_obj.has_previous %}<a class="button" href="{% querystring page=page_obj.previous_page_number %}">Zur&uuml;ck</a>{% endif %}
+  <span>Seite {{ page_obj.number }} von {{ paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a class="button" href="{% querystring page=page_obj.next_page_number %}">Weiter</a>{% endif %}
+</nav>{% endif %}
+{% endblock %}

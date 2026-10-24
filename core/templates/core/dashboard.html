@@ -23,4 +23,14 @@
   <div class="section-heading"><h2>Zuletzt angelegte Risiken</h2><a href="{% url 'risks:list' %}">Alle Risiken</a></div>
   {% include 'risks/table.html' with risks=recent_risks %}
 </section>
+<section class="dashboard-incidents">
+  <div class="section-heading"><h2>Vorf&auml;lle</h2><a href="{% url 'incidents:list' %}">Alle Vorf&auml;lle</a>{% if can_write_incidents %}<a class="button" href="{% url 'incidents:create' %}">Neuer Vorfall</a>{% endif %}</div>
+  <dl class="metrics">
+    <div><dt>Offene Vorf&auml;lle</dt><dd>{{ incident_counts.open }}</dd></div>
+    <div><dt>Kritische Vorf&auml;lle</dt><dd>{{ incident_counts.critical }}</dd></div>
+    <div><dt>Meldepflicht in Pr&uuml;fung</dt><dd>{{ incident_counts.under_review }}</dd></div>
+  </dl>
+  <h3>Zuletzt angelegte Vorf&auml;lle</h3>
+  {% include 'incidents/table.html' with incidents=recent_incidents %}
+</section>
 {% endblock %}

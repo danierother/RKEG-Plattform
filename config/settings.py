@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'organizations.apps.OrganizationsConfig',
     'risks.apps.RisksConfig',
+    'incidents.apps.IncidentsConfig',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

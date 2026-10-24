@@ -7,12 +7,13 @@ from django.views.decorators.cache import never_cache
 from .models import Membership
 
 ORGANIZATION_SESSION_KEY = 'active_organization_id'
-RISK_WRITE_ROLES = frozenset({
+WRITE_ROLES = frozenset({
     Membership.Role.ADMIN,
     Membership.Role.RESILIENCE_MANAGER,
     Membership.Role.RISK_MANAGER,
     Membership.Role.EDITOR,
 })
+RISK_WRITE_ROLES = WRITE_ROLES
 
 
 @method_decorator(never_cache, name='dispatch')
@@ -51,6 +52,7 @@ class OrganizationContextMixin(LoginRequiredMixin):
             active_membership=self.membership,
             memberships=self.memberships,
             can_write_risks=bool(self.membership and self.membership.role in RISK_WRITE_ROLES),
+            can_write_incidents=bool(self.membership and self.membership.role in WRITE_ROLES),
         )
         return context
 
@@ -60,8 +62,11 @@ class OrganizationQuerysetMixin(OrganizationContextMixin):
         return super().get_queryset().filter(organization=self.organization)
 
 
-class RiskWritePermissionMixin:
+class OrganizationWritePermissionMixin:
     def dispatch(self, request, *args, **kwargs):
-        if self.membership.role not in RISK_WRITE_ROLES:
+        if self.membership.role not in WRITE_ROLES:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
+
+
+RiskWritePermissionMixin = OrganizationWritePermissionMixin

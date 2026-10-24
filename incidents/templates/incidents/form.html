@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Vorfall bearbeiten{% else %}Neuer Vorfall{% endif %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'incidents:list' %}{% if incident_query %}?{{ incident_query }}{% endif %}">Zu den Vorf&auml;llen</a>
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>{% if object %}Vorfall bearbeiten{% else %}Neuer Vorfall{% endif %}</h1></div></div>
+<form method="post" class="form-stack constrained">
+  {% csrf_token %}
+  {% if form.errors %}<div class="error-summary" role="alert"><strong>Bitte pr&uuml;fen Sie Ihre Eingaben.</strong>{{ form.non_field_errors }}{% for field in form.hidden_fields %}{{ field.errors }}{% endfor %}</div>{% endif %}
+  {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+  {% for section in form.sections %}<fieldset class="risk-section"><legend>{{ section.title }}</legend>
+    {% for field in section.fields %}<div class="field">
+      {% if field.widget_type == 'checkbox' %}<label for="{{ field.id_for_label }}">{{ field }} {{ field.label }}</label>{% else %}{{ field.label_tag }}{{ field }}{% endif %}
+      {{ field.errors }}
+    </div>{% endfor %}
+  </fieldset>{% endfor %}
+  <div class="form-actions"><button type="submit" class="button primary">Speichern</button>
+    {% if object %}<a class="button" href="{% url 'incidents:detail' object.pk %}{% if incident_query %}?register={{ incident_query|urlencode }}{% endif %}">Abbrechen</a>{% else %}<a class="button" href="{% url 'incidents:list' %}">Abbrechen</a>{% endif %}
+  </div>
+</form>
+{% endblock %}
