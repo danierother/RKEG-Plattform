@@ -37,6 +37,8 @@ class Risk(models.Model):
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    risk_source = models.TextField(blank=True)
+    potential_impact = models.TextField(blank=True)
     status = models.CharField(max_length=32, choices=Status.choices, default=Status.OPEN)
     likelihood = models.PositiveSmallIntegerField(
         choices=Likelihood.choices, default=Likelihood.POSSIBLE,
@@ -47,6 +49,14 @@ class Risk(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
     )
     treatment_strategy = models.CharField(max_length=16, choices=TreatmentStrategy.choices, blank=True)
+    residual_likelihood = models.PositiveSmallIntegerField(
+        choices=Likelihood.choices, default=Likelihood.POSSIBLE,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+    residual_impact = models.PositiveSmallIntegerField(
+        choices=Impact.choices, default=Impact.MODERATE,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='created_risks'
     )
@@ -59,6 +69,10 @@ class Risk(models.Model):
                                    name='risk_likelihood_1_to_5'),
             models.CheckConstraint(condition=models.Q(impact__gte=1, impact__lte=5),
                                    name='risk_impact_1_to_5'),
+            models.CheckConstraint(condition=models.Q(residual_likelihood__gte=1, residual_likelihood__lte=5),
+                                   name='risk_residual_likelihood_1_to_5'),
+            models.CheckConstraint(condition=models.Q(residual_impact__gte=1, residual_impact__lte=5),
+                                   name='risk_residual_impact_1_to_5'),
         ]
 
     @property
@@ -69,10 +83,21 @@ class Risk(models.Model):
     def risk_class(self):
         return classify_score(self.risk_score)
 
+    @property
+    def residual_risk_score(self):
+        return calculate_score(self.residual_likelihood, self.residual_impact)
+
+    @property
+    def residual_risk_class(self):
+        return classify_score(self.residual_risk_score)
+
     def clean(self):
         super().clean()
-        if self.pk and self.measures.exclude(organization_id=self.organization_id).exists():
-            raise ValidationError({'organization': 'Risiken mit Massnahmen koennen die Organisation nicht wechseln.'})
+        if self.pk and (
+            self.measures.exclude(organization_id=self.organization_id).exists()
+            or self.controls.exclude(organization_id=self.organization_id).exists()
+        ):
+            raise ValidationError({'organization': 'Risiken mit Massnahmen oder Kontrollen koennen die Organisation nicht wechseln.'})
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -117,6 +142,68 @@ class RiskMeasure(models.Model):
         if self.risk_id and not self.organization_id:
             self.organization_id = self.risk.organization_id
         self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+class RiskControl(models.Model):
+    class ControlType(models.TextChoices):
+        PREVENTIVE = 'PREVENTIVE', 'Pr\u00e4ventiv'
+        DETECTIVE = 'DETECTIVE', 'Detektiv'
+        CORRECTIVE = 'CORRECTIVE', 'Korrektiv'
+        ORGANIZATIONAL = 'ORGANIZATIONAL', 'Organisatorisch'
+        TECHNICAL = 'TECHNICAL', 'Technisch'
+        OTHER = 'OTHER', 'Sonstige'
+
+    class Effectiveness(models.IntegerChoices):
+        VERY_LOW = 1, 'Sehr gering'
+        LOW = 2, 'Gering'
+        MEDIUM = 3, 'Mittel'
+        HIGH = 4, 'Hoch'
+        VERY_HIGH = 5, 'Sehr hoch'
+
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT,
+                                     related_name='risk_controls')
+    risk = models.ForeignKey(Risk, on_delete=models.CASCADE, related_name='controls')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    control_type = models.CharField(max_length=24, choices=ControlType.choices, blank=True)
+    effectiveness = models.PositiveSmallIntegerField(
+        choices=Effectiveness.choices, default=Effectiveness.MEDIUM,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+    responsible_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                                         related_name='risk_controls', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.CheckConstraint(
+            condition=models.Q(effectiveness__gte=1, effectiveness__lte=5),
+            name='risk_control_effectiveness_1_to_5',
+        )]
+
+    def clean(self):
+        super().clean()
+        if self.risk_id:
+            organization_id = self.risk.organization_id
+            if self.organization_id and self.organization_id != organization_id:
+                raise ValidationError({'organization': 'Kontrolle und Risiko muessen derselben Organisation angehoeren.'})
+            self.organization_id = organization_id
+        if self.responsible_user_id and not self.responsible_user.memberships.filter(
+            organization_id=self.organization_id, is_active=True, user__is_active=True,
+        ).exists():
+            raise ValidationError({'responsible_user': 'Bitte waehlen Sie ein aktives Mitglied der Organisation.'})
+
+    def save(self, *args, **kwargs):
+        if self.risk_id and not self.organization_id:
+            self.organization_id = self.risk.organization_id
+        self.full_clean()
+        # Keep the derived organization in sync even for partial saves.
+        if kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'organization'}
         return super().save(*args, **kwargs)
 
     def __str__(self):

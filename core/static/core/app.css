@@ -1,4 +1,11 @@
 :root { color-scheme: light; --ink: #222a29; --muted: #616c69; --line: #dce2df; --accent: #116858; --surface: #f5f7f6; }
+.risk-section { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 20px 0 0; min-width: 0; display: grid; gap: 20px; }
+.risk-section legend { font-size: 19px; font-weight: 600; padding: 0 16px 0 0; }
+.assessment-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.assessment-modes { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 4px; margin-bottom: 24px; }
+.assessment-modes a { padding: 10px 18px; text-decoration: none; }
+.assessment-modes a[aria-current] { background: var(--accent); color: white; }
+.description .prose + h3 { margin-top: 24px; }
 .risk-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 16px; padding-block: 20px; margin-bottom: 24px; border-block: 1px solid var(--line); }
 .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
 .matrix-scroll { overflow-x: auto; }

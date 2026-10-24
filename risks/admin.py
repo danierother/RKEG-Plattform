@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from core.admin import SuperuserOnlyAdminMixin
-from .models import Risk, RiskMeasure
+from .models import Risk, RiskMeasure, RiskControl
 
 
 @admin.register(Risk)
@@ -11,7 +11,8 @@ class RiskAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
     search_fields = ('title', 'description', 'organization__name')
     autocomplete_fields = ('organization', 'created_by')
     list_select_related = ('organization', 'created_by')
-    readonly_fields = ('risk_score', 'risk_class', 'created_at', 'updated_at')
+    readonly_fields = ('risk_score', 'risk_class', 'residual_risk_score', 'residual_risk_class',
+                       'created_at', 'updated_at')
 
 
 @admin.register(RiskMeasure)
@@ -24,3 +25,9 @@ class RiskMeasureAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         return self.readonly_fields + (('risk',) if obj else ())
+
+
+@admin.register(RiskControl)
+class RiskControlAdmin(RiskMeasureAdmin):
+    list_display = ('title', 'risk', 'organization', 'control_type', 'effectiveness', 'responsible_user')
+    list_filter = ('control_type', 'effectiveness', 'organization')

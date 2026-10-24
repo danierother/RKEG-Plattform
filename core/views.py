@@ -27,4 +27,12 @@ class DashboardView(OrganizationContextMixin, TemplateView):
         context['risk_class_metrics'] = [
             {'band': band, 'count': class_counts[band.code]} for band in DEFAULT_RISK_BANDS
         ]
+        residual_counts = risks.annotate(score=score_expression(residual=True)).aggregate(**{
+            band.code: Count('pk', filter=Q(score__gte=band.minimum, score__lte=band.maximum))
+            for band in DEFAULT_RISK_BANDS
+        })
+        context['residual_risk_class_counts'] = residual_counts
+        context['residual_risk_class_metrics'] = [
+            {'band': band, 'count': residual_counts[band.code]} for band in DEFAULT_RISK_BANDS
+        ]
         return context

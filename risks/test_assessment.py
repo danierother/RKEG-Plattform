@@ -91,7 +91,7 @@ class AssessmentModelAndViewTests(TenantTestCase):
     def test_detail_and_register_show_assessment(self):
         for url in ('/risks/', reverse('risks:detail', args=[self.risk.pk])):
             response = self.client.get(url)
-            self.assertContains(response, 'Risikowert')
+            self.assertContains(response, 'Bruttorisikowert')
             self.assertContains(response, 'risk-class-medium')
 
     def test_dashboard_class_counts_are_tenant_scoped(self):

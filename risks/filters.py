@@ -20,17 +20,19 @@ class RiskFilterForm(forms.Form):
     status = forms.ChoiceField(label='Status', required=False, choices=[
         ('', 'Alle Status'), ('OPEN', 'Offen'), ('IN_PROGRESS', 'In Bearbeitung'), ('CLOSED', 'Geschlossen'),
     ])
-    risk_class = forms.ChoiceField(label='Risikoklasse', required=False,
+    risk_class = forms.ChoiceField(label='Bruttorisikoklasse', required=False,
                                   choices=[('', 'Alle Klassen')] + [(b.code, b.label) for b in DEFAULT_RISK_BANDS])
-    likelihood = forms.ChoiceField(label='Eintrittswahrscheinlichkeit', required=False,
+    residual_risk_class = forms.ChoiceField(label='Restrisikoklasse', required=False,
+        choices=[('', 'Alle Klassen')] + [(b.code, b.label) for b in DEFAULT_RISK_BANDS])
+    likelihood = forms.ChoiceField(label='Brutto-Wahrscheinlichkeit', required=False,
                                   choices=[('', 'Alle')] + [(v, f'{v} - {label}') for v, label in Risk.Likelihood.choices])
-    impact = forms.ChoiceField(label='Auswirkung', required=False,
+    impact = forms.ChoiceField(label='Brutto-Auswirkung', required=False,
                               choices=[('', 'Alle')] + [(v, f'{v} - {label}') for v, label in Risk.Impact.choices])
     treatment_strategy = forms.ChoiceField(label='Behandlungsstrategie', required=False,
         choices=[('', 'Alle Strategien'), ('none', 'Nicht festgelegt')] + list(Risk.TreatmentStrategy.choices))
     sort = forms.ChoiceField(label='Sortierung', required=False, choices=[
-        ('newest', 'Neueste Risiken'), ('title', 'Titel'), ('score_asc', 'Risikowert aufsteigend'),
-        ('score_desc', 'Risikowert absteigend'), ('updated', 'Zuletzt ge\u00e4ndert'),
+        ('newest', 'Neueste Risiken'), ('title', 'Titel'), ('score_asc', 'Bruttorisikowert aufsteigend'),
+        ('score_desc', 'Bruttorisikowert absteigend'), ('updated', 'Zuletzt ge\u00e4ndert'),
     ])
 
     def __init__(self, data=None, **kwargs):
@@ -46,7 +48,7 @@ class RiskFilterForm(forms.Form):
         self.is_valid()
         # Invalid individual filters do not disable other valid filters.
         values = self.cleaned_data
-        queryset = queryset.annotate(score=score_expression())
+        queryset = queryset.annotate(score=score_expression(), residual_score=score_expression(residual=True))
         if values.get('q'):
             queryset = queryset.filter(Q(title__icontains=values['q']) | Q(description__icontains=values['q']))
         for name in ('status', 'likelihood', 'impact'):
@@ -55,7 +57,8 @@ class RiskFilterForm(forms.Form):
         if values.get('treatment_strategy'):
             value = values['treatment_strategy']
             queryset = queryset.filter(treatment_strategy='' if value == 'none' else value)
-        band = next((band for band in DEFAULT_RISK_BANDS if band.code == values.get('risk_class')), None)
-        if band:
-            queryset = queryset.filter(score__gte=band.minimum, score__lte=band.maximum)
+        for field, score in (('risk_class', 'score'), ('residual_risk_class', 'residual_score')):
+            band = next((band for band in DEFAULT_RISK_BANDS if band.code == values.get(field)), None)
+            if band:
+                queryset = queryset.filter(**{f'{score}__gte': band.minimum, f'{score}__lte': band.maximum})
         return queryset.order_by(*SORT_ORDERS[values.get('sort', 'newest')])
