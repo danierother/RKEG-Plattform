@@ -54,4 +54,6 @@ class DashboardView(OrganizationContextMixin, TemplateView):
         ).aggregate(critical=Count('pk', filter=Q(criticality__gte=4)),
                     single_points=Count('pk', filter=Q(single_point_of_failure=True)))
         context['important_services'] = services.select_related('service_owner').order_by('-criticality', 'recovery_priority', 'name', 'pk')[:5]
+        from incidents.rkeg_reporting import reporting_dashboard
+        context['rkeg_counts'] = reporting_dashboard(self.organization)
         return context

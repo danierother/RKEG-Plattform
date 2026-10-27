@@ -5,6 +5,9 @@ from django.db import models
 class Organization(models.Model):
     name = models.CharField(max_length=255)
     legal_name = models.CharField(max_length=255, blank=True)
+    rkeg_classified = models.BooleanField('Behoerdliche RKEG-Einstufung dokumentiert', null=True, blank=True)
+    rkeg_classification_reference = models.CharField('Einstufungsbescheid / Referenz', max_length=500, blank=True, db_default='')
+    rkeg_reporting_obligation_start_date = models.DateField('Dokumentierter Beginn der Meldepflicht', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

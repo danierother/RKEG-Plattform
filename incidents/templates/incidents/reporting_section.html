@@ -1,0 +1,31 @@
+<section class="description" id="rkeg">
+  <div class="section-heading"><h2>RKEG-Meldepr&uuml;fung</h2>{% if can_write_incidents %}<a class="button" href="{% url 'incidents:reporting-data' incident.pk %}">Pr&uuml;fdaten bearbeiten</a>{% endif %}</div>
+  <dl class="details">
+    <div><dt>Beh&ouml;rdliche Einstufung dokumentiert</dt><dd>{{ active_organization.rkeg_classified|yesno:'Ja,Nein,Unbekannt' }}</dd></div>
+    <div><dt>Bescheidreferenz</dt><dd>{{ active_organization.rkeg_classification_reference|default:'Nicht hinterlegt' }}</dd></div>
+    <div><dt>Beginn der Meldepflicht</dt><dd>{{ active_organization.rkeg_reporting_obligation_start_date|date:'d.m.Y'|default:'Nicht hinterlegt' }}</dd></div>
+  </dl>
+  <h3>Aktuelle automatische Berechnung</h3>
+  {% if rkeg_manual %}<h3>Aktuelle manuelle &Uuml;bersteuerung</h3><p class="rkeg-result">{{ rkeg_manual.get_result_display }} / MANUELL</p><p>{{ rkeg_manual.manual_override_reason }}</p><a href="{% url 'incidents:assessment-detail' incident.pk rkeg_manual.pk %}">Dokumentierte manuelle Bewertung</a>{% endif %}
+  <p class="rkeg-result rkeg-{{ rkeg_evaluation.result }}">{{ rkeg_evaluation.label }}</p>
+  <p>{{ rkeg_evaluation.explanation }}</p>
+  <p class="muted">Berechnungszeitpunkt: {{ rkeg_evaluation.evaluated_at|date:'d.m.Y H:i:s' }}. Keine allgemeine rechtliche Entwarnung; parallele sektorspezifische Pflichten bleiben gesondert zu pr&uuml;fen.</p>
+  {% include 'incidents/reporting_results.html' with results=rkeg_evaluation.details editable=True %}
+  {% if can_write_incidents %}<a class="button primary" href="{% url 'incidents:assessment-create' incident.pk %}">Bewertung dokumentieren</a>{% endif %}
+  {% if rkeg_deadlines.required %}
+  <h3>Meldezeitpunkte</h3>
+  <p>Unverz&uuml;glich &ndash; 24 Stunden sind die gesetzliche H&ouml;chstfrist, soweit dies operativ m&ouml;glich ist.</p>
+  <dl class="details">
+    <div><dt>Kenntnis vom meldepflichtigen Sicherheitsvorfall</dt><dd>{{ incident.rkeg_awareness_at|date:'d.m.Y H:i'|default:'Nicht dokumentiert: manuelle Pruefung erforderlich' }}</dd></div>
+    <div><dt>Erstmeldung sp&auml;testens</dt><dd>{{ rkeg_deadlines.initial_due_at|date:'d.m.Y H:i'|default:'Ohne Kenntniszeit nicht berechenbar' }}{% if rkeg_deadlines.initial_overdue %} <strong>&Uuml;berf&auml;llig</strong>{% endif %}</dd></div>
+    <div><dt>Erstmeldung erfolgt</dt><dd>{{ rkeg_deadlines.initial_report.submitted_at|date:'d.m.Y H:i'|default:'Nicht dokumentiert' }}</dd></div>
+    <div><dt>Folgemeldung sp&auml;testens</dt><dd>{{ rkeg_deadlines.follow_up_due_at|date:'d.m.Y H:i'|default:'Erstmeldung noch nicht dokumentiert' }}{% if rkeg_deadlines.follow_up_reported %} / &Uuml;bermittlung dokumentiert{% endif %}</dd></div>
+    <div><dt>Beendigungsmeldung erforderlich</dt><dd>{% if rkeg_deadlines.end_notification_required %}Ja, unverz&uuml;glich{% else %}Noch keine Beendigung dokumentiert oder Meldung bereits erfasst{% endif %}</dd></div>
+  </dl>
+  {% endif %}
+  <h3>Pr&uuml;fhistorie</h3>
+  <ul>{% for assessment in rkeg_history %}<li><a href="{% url 'incidents:assessment-detail' incident.pk assessment.pk %}">{{ assessment.assessed_at|date:'d.m.Y H:i:s' }} / {{ assessment.get_result_display }}</a> / {% if assessment.manual_override %}Manuell{% else %}Automatisch{% endif %} / {{ assessment.assessed_by }}</li>{% empty %}<li>Noch keine Bewertung dokumentiert</li>{% endfor %}</ul>
+  <div class="section-heading"><h3>Meldungsentw&uuml;rfe und externe &Uuml;bermittlungen</h3>{% if can_write_incidents %}<a class="button" href="{% url 'incidents:report-create' incident.pk %}">Meldungsentwurf anlegen</a>{% endif %}</div>
+  <p class="muted">Technische &Uuml;bermittlung an die Beh&ouml;rde ist in dieser Prototypversion nicht implementiert.</p>
+  <ul>{% for report in incident_reports %}<li><a href="{% url 'incidents:report-detail' incident.pk report.pk %}">{{ report.get_report_type_display }}</a> / {{ report.get_status_display }} / {{ report.submitted_at|date:'d.m.Y H:i'|default:'Nicht uebermittelt' }}</li>{% empty %}<li>Keine Meldungsentw&uuml;rfe vorhanden</li>{% endfor %}</ul>
+</section>

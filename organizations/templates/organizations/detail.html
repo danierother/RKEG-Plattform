@@ -9,4 +9,9 @@
   <div><dt>Ihre Rolle</dt><dd>{{ active_membership.get_role_display }}</dd></div>
   <div><dt>Erstellt am</dt><dd>{{ active_organization.created_at|date:'d.m.Y H:i' }}</dd></div>
 </dl>
+<section class="description"><h2>RKEG-Anwendbarkeit</h2>
+<dl class="details"><div><dt>Beh&ouml;rdliche Einstufung dokumentiert</dt><dd>{{ active_organization.rkeg_classified|yesno:'Ja,Nein,Unbekannt' }}</dd></div>
+<div><dt>Bescheidreferenz</dt><dd>{{ active_organization.rkeg_classification_reference|default:'Nicht hinterlegt' }}</dd></div>
+<div><dt>Beginn der Meldepflicht</dt><dd>{{ active_organization.rkeg_reporting_obligation_start_date|date:'d.m.Y'|default:'Nicht hinterlegt' }}</dd></div></dl>
+{% if can_write_incidents %}<a class="button" href="{% url 'organizations:rkeg-edit' %}">Einstufung dokumentieren</a>{% endif %}</section>
 {% endblock %}

@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from core.admin import SuperuserOnlyAdminMixin
-from .models import Incident, IncidentAction, IncidentEvent
+from .models import Incident, IncidentAction, IncidentEvent, IncidentReport, IncidentRKEGAssessment, IncidentServiceImpact
 
 
 class IncidentReadOnlyAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
@@ -35,3 +35,18 @@ class IncidentEventAdmin(IncidentReadOnlyAdmin):
 class IncidentActionAdmin(IncidentReadOnlyAdmin):
     list_display = ('title', 'incident', 'status', 'responsible_user', 'due_date')
     list_select_related = ('incident', 'responsible_user')
+
+
+@admin.register(IncidentReport)
+class IncidentReportAdmin(IncidentReadOnlyAdmin):
+    list_display = ('incident', 'organization', 'report_type', 'status', 'submitted_at')
+    list_filter = ('organization', 'report_type', 'status')
+
+
+@admin.register(IncidentRKEGAssessment)
+class AssessmentAdmin(IncidentReadOnlyAdmin):
+    list_display = ('incident', 'organization', 'result', 'manual_override', 'assessed_at', 'rule_version')
+    list_filter = ('organization', 'result', 'manual_override')
+
+
+admin.site.register(IncidentServiceImpact, IncidentReadOnlyAdmin)

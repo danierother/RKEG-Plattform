@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}{{ report.get_report_type_display }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'incidents:detail' incident.pk %}">Zum Vorfall</a>
+<div class="page-heading"><h1>{{ report.get_report_type_display }}</h1>{% if can_write_incidents and report.status == 'DRAFT' %}<a class="button" href="{% url 'incidents:report-edit' incident.pk report.pk %}">Entwurf bearbeiten</a>{% endif %}</div>
+<p>Technische &Uuml;bermittlung an die Beh&ouml;rde ist in dieser Prototypversion nicht implementiert.</p>
+<dl class="details"><div><dt>Status</dt><dd>{{ report.get_status_display }}</dd></div><div><dt>Extern &uuml;bermittelt am</dt><dd>{{ report.submitted_at|date:'d.m.Y H:i'|default:'Nicht dokumentiert' }}</dd></div><div><dt>Erstellt von / am</dt><dd>{{ report.created_by }} / {{ report.created_at|date:'d.m.Y H:i' }}</dd></div></dl>
+{% for label, value in report_fields %}<section class="description"><h2>{{ label }}</h2><div class="prose">{{ value|default:'Nicht dokumentiert'|linebreaksbr }}</div></section>{% endfor %}
+{% endblock %}

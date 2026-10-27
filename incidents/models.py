@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 def validate_responsible_user(instance):
@@ -11,7 +12,45 @@ def validate_responsible_user(instance):
         raise ValidationError({'responsible_user': 'Bitte waehlen Sie ein aktives Mitglied der Organisation.'})
 
 
-class Incident(models.Model):
+class RKEGFacts(models.Model):
+    class DisruptionStatus(models.TextChoices):
+        OUTAGE = 'OUTAGE', 'Ausfall'
+        RESTRICTED_AVAILABILITY = 'RESTRICTED_AVAILABILITY', 'Eingeschraenkte Verfuegbarkeit'
+
+    class CrossBorder(models.TextChoices):
+        UNKNOWN = 'UNKNOWN', 'Unbekannt'
+        NO = 'NO', 'Nein'
+        YES = 'YES', 'Ja'
+
+    disruption_started_at = models.DateTimeField('Beginn der Stoerung', null=True, blank=True)
+    disruption_ended_at = models.DateTimeField('Ende der Stoerung', null=True, blank=True)
+    disruption_status = models.CharField('Stoerungsart', max_length=32, choices=DisruptionStatus.choices, blank=True)
+    unplanned_confirmed = models.BooleanField('Ungeplante Stoerung bestaetigt', null=True, blank=True)
+    significant_impairment_confirmed = models.BooleanField('Erhebliche Beeintraechtigung nach RKEV § 2 Z 2 bestaetigt', null=True, blank=True)
+    affected_users = models.PositiveBigIntegerField('Betroffene Nutzer', null=True, blank=True)
+    affected_metering_points = models.PositiveBigIntegerField('Betroffene Zaehlpunkte', null=True, blank=True)
+    affected_geographic_area = models.TextField('Betroffenes geografisches Gebiet', blank=True)
+    cross_border_impact = models.CharField('Grenzueberschreitende Auswirkungen', max_length=8,
+                                          choices=CrossBorder.choices, default=CrossBorder.UNKNOWN, blank=True)
+    special_threshold_condition_met = models.BooleanField('Kein Handelsergebnis fuer physische Stromprodukte', null=True, blank=True)
+    special_threshold_description = models.TextField('Dokumentation des Sonderkriteriums', blank=True)
+
+    class Meta:
+        abstract = True
+
+    def clean(self):
+        super().clean()
+        if self.disruption_ended_at and not self.disruption_started_at:
+            raise ValidationError({'disruption_started_at': 'Bitte auch den Beginn dokumentieren.'})
+        if self.disruption_started_at and self.disruption_ended_at and self.disruption_ended_at < self.disruption_started_at:
+            raise ValidationError({'disruption_ended_at': 'Das Ende darf nicht vor dem Beginn liegen.'})
+        for field in ('disruption_started_at', 'disruption_ended_at'):
+            value = getattr(self, field)
+            if value and value > timezone.now():
+                raise ValidationError({field: 'Tatsaechliche Zeitpunkte duerfen nicht in der Zukunft liegen.'})
+
+
+class Incident(RKEGFacts):
     class Status(models.TextChoices):
         NEW = 'NEW', 'Neu'
         ACTIVE = 'ACTIVE', 'In Bearbeitung'
@@ -43,6 +82,8 @@ class Incident(models.Model):
         REPORTED = 'REPORTED', 'Gemeldet'
 
     OPEN_STATUSES = (Status.NEW, Status.ACTIVE, Status.CONTAINED)
+
+    rkeg_awareness_at = models.DateTimeField('Kenntnis vom meldepflichtigen Sicherheitsvorfall', null=True, blank=True)
 
     organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT,
                                      related_name='incidents')
@@ -85,6 +126,8 @@ class Incident(models.Model):
 
     def clean(self):
         super().clean()
+        if self.rkeg_awareness_at and self.rkeg_awareness_at > timezone.now():
+            raise ValidationError({'rkeg_awareness_at': 'Die Kenntniszeit darf nicht in der Zukunft liegen.'})
         if self.occurred_at and self.detected_at and self.detected_at < self.occurred_at:
             raise ValidationError({'detected_at': 'Die Erkennungszeit darf nicht vor der Ereigniszeit liegen.'})
         if self.pk and type(self).objects.filter(pk=self.pk).exclude(organization_id=self.organization_id).exists():
@@ -173,3 +216,116 @@ class IncidentAction(IncidentChildMixin):
 
     def __str__(self):
         return self.title
+
+
+class IncidentServiceImpact(IncidentChildMixin, RKEGFacts):
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT)
+    incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name='service_impacts')
+    service = models.ForeignKey('services.CriticalService', on_delete=models.PROTECT)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('incident', 'service'), name='unique_incident_service_impact')]
+
+    def clean(self):
+        super().clean()
+        if self.service_id and self.incident_id:
+            if self.service.organization_id != self.organization_id or not self.incident.affected_services.filter(pk=self.service_id).exists():
+                raise ValidationError({'service': 'Nur ein zugeordneter Dienst derselben Organisation ist erlaubt.'})
+
+
+class IncidentReport(IncidentChildMixin):
+    class ReportType(models.TextChoices):
+        INITIAL = 'INITIAL', 'Erstmeldung'
+        FOLLOW_UP = 'FOLLOW_UP', 'Folgemeldung'
+        ADDITIONAL_INFORMATION = 'ADDITIONAL_INFORMATION', 'Ergaenzende Informationen'
+        END_NOTIFICATION = 'END_NOTIFICATION', 'Beendigungsmeldung'
+
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', 'Interner Entwurf'
+        MARKED_AS_SUBMITTED = 'MARKED_AS_SUBMITTED', 'Extern uebermittelt (dokumentiert)'
+
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT)
+    incident = models.ForeignKey(Incident, on_delete=models.PROTECT, related_name='reports')
+    report_type = models.CharField('Meldungsart', max_length=32, choices=ReportType.choices)
+    status = models.CharField('Status', max_length=24, choices=Status.choices, default=Status.DRAFT)
+    submitted_at = models.DateTimeField('Tatsaechliche externe Uebermittlung am', null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    incident_type_description = models.TextField('Art des Sicherheitsvorfalls', blank=True)
+    suspected_cause = models.TextField('Vermutete Ursache', blank=True)
+    confirmed_cause = models.TextField('Bestaetigte Ursache', blank=True)
+    consequences = models.TextField('Folgen', blank=True)
+    measures_taken = models.TextField('Ergriffene Massnahmen', blank=True)
+    affected_critical_infrastructure = models.TextField('Betroffene kritische Infrastruktur', blank=True)
+    cross_border_information = models.TextField('Grenzueberschreitende Auswirkungen', blank=True)
+    additional_information = models.TextField('Ergaenzende Informationen', blank=True)
+
+    def clean(self):
+        super().clean()
+        if self.pk:
+            old = type(self).objects.get(pk=self.pk)
+            if old.status == self.Status.MARKED_AS_SUBMITTED:
+                raise ValidationError('Dokumentierte Uebermittlungen sind unveraenderlich. Ergaenzung anlegen.')
+            if (old.incident_id, old.organization_id, old.created_by_id) != (self.incident_id, self.organization_id, self.created_by_id):
+                raise ValidationError('Vorfall, Organisation und Ersteller sind unveraenderlich.')
+        if self.status == self.Status.MARKED_AS_SUBMITTED and not self.submitted_at:
+            raise ValidationError({'submitted_at': 'Bitte den tatsaechlichen Uebermittlungszeitpunkt dokumentieren.'})
+        if self.submitted_at and (self.status != self.Status.MARKED_AS_SUBMITTED or self.submitted_at > timezone.now()):
+            raise ValidationError({'submitted_at': 'Nur bereits erfolgte externe Uebermittlungen sind zulaessig.'})
+        if self.report_type == self.ReportType.FOLLOW_UP and self.submitted_at:
+            first = self.incident.reports.filter(organization_id=self.organization_id, report_type=self.ReportType.INITIAL,
+                status=self.Status.MARKED_AS_SUBMITTED).order_by('submitted_at').first()
+            if not first or self.submitted_at < first.submitted_at:
+                raise ValidationError({'submitted_at': 'Eine Folgemeldung setzt eine dokumentierte Erstmeldung voraus.'})
+
+    def __str__(self):
+        return f'{self.get_report_type_display()} - {self.incident}'
+
+
+class IncidentRKEGAssessment(IncidentChildMixin):
+    class Result(models.TextChoices):
+        NOT_ASSESSED = 'NOT_ASSESSED', 'Noch nicht geprueft'
+        NOT_APPLICABLE = 'NOT_APPLICABLE', '§ 17 RKEG nicht anwendbar'
+        EXEMPT_SECTOR = 'EXEMPT_SECTOR', '§ 17 RKEG nicht anwendbar (Sektorausnahme)'
+        INSUFFICIENT_DATA = 'INSUFFICIENT_DATA', 'Daten unvollstaendig - manuelle Pruefung erforderlich'
+        BELOW_THRESHOLD = 'BELOW_THRESHOLD', 'Schwelle nicht ueberschritten'
+        REPORTABLE = 'REPORTABLE', 'Meldepflichtig'
+        MANUAL_REVIEW = 'MANUAL_REVIEW', 'Manuelle Pruefung erforderlich'
+
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT)
+    incident = models.ForeignKey(Incident, on_delete=models.PROTECT, related_name='rkeg_assessments')
+    result = models.CharField(max_length=24, choices=Result.choices)
+    assessed_at = models.DateTimeField(default=timezone.now)
+    assessed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    legal_reference = models.TextField()
+    applied_rule = models.JSONField(default=list, blank=True)
+    input_snapshot = models.JSONField(default=dict, blank=True)
+    calculated_duration = models.DurationField(null=True, blank=True)
+    calculated_user_hours = models.DecimalField(max_digits=40, decimal_places=8, null=True, blank=True)
+    calculated_metering_point_hours = models.DecimalField(max_digits=40, decimal_places=8, null=True, blank=True)
+    threshold_value = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
+    explanation = models.TextField()
+    manual_override = models.BooleanField(default=False)
+    manual_override_reason = models.TextField('Begruendung', blank=True)
+    based_on = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True, related_name='overrides')
+    rule_version = models.CharField(max_length=100)
+
+    def clean(self):
+        super().clean()
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError('Pruefhistorie ist unveraenderlich. Neue Bewertung anlegen.')
+        if self.manual_override:
+            if not self.manual_override_reason.strip() or not self.based_on_id:
+                raise ValidationError('Manuelle Bewertung benoetigt Begruendung und automatische Ausgangsbewertung.')
+            if self.based_on.incident_id != self.incident_id or self.based_on.organization_id != self.organization_id or self.based_on.manual_override:
+                raise ValidationError('Ungueltige automatische Ausgangsbewertung.')
+        elif self.based_on_id:
+            raise ValidationError('Nur manuelle Bewertungen beziehen sich auf eine Ausgangsbewertung.')
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('Pruefhistorie darf nicht geloescht werden.')
+
+    def __str__(self):
+        return f'{self.incident} - {self.get_result_display()}'

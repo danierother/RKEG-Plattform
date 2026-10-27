@@ -29,4 +29,8 @@
 <section class="description"><h2>Zugeordnete Vorf&auml;lle</h2>{% if incidents %}<ul>{% for incident in incidents %}<li><a href="{% url 'incidents:detail' incident.pk %}">{{ incident.title }}</a></li>{% endfor %}</ul>{% else %}<p>Keine Vorf&auml;lle zugeordnet</p>{% endif %}</section>
 <section class="description"><h2>Notizen</h2><div class="prose">{{ service.notes|default:'Keine Notizen hinterlegt.'|linebreaksbr }}</div></section>
 <dl class="details"><div><dt>Erstellt am</dt><dd>{{ service.created_at|date:'d.m.Y H:i' }}</dd></div><div><dt>Ge&auml;ndert am</dt><dd>{{ service.updated_at|date:'d.m.Y H:i' }}</dd></div></dl>
+<section class="description"><h2>RKEG-Bescheidzuordnung</h2><dl class="details">
+<div><dt>Sektor / Teilsektor</dt><dd>{{ service.rkeg_sector|default:'Nicht hinterlegt' }} / {{ service.rkeg_subsector|default:'Kein Teilsektor' }}</dd></div>
+<div><dt>Dienstcode</dt><dd>{{ service.rkeg_service_code|default:'Nicht hinterlegt' }}</dd></div>
+<div><dt>Bescheidreferenz</dt><dd>{{ service.rkeg_service_reference|default:'Nicht hinterlegt' }}</dd></div></dl></section>
 {% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'incidents:detail' incident.pk %}">Zum Vorfall</a>
+<div class="page-heading"><div><div class="eyebrow">{{ incident.title }}{% if service %} / {{ service.name }}{% endif %}</div><h1>{{ page_title }}</h1></div></div>
+<p class="muted">Technische &Uuml;bermittlung an die Beh&ouml;rde ist in dieser Prototypversion nicht implementiert.</p>
+<form method="post" class="form-stack constrained">{% csrf_token %}{% include 'includes/form_fields.html' %}
+<div class="form-actions"><button class="button primary" type="submit">Dokumentieren</button><a class="button" href="{% url 'incidents:detail' incident.pk %}">Abbrechen</a></div></form>
+{% endblock %}

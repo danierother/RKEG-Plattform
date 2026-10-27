@@ -48,6 +48,12 @@ class IncidentDetailView(OrganizationQuerysetMixin, DetailView):
             actions=self.object.actions.filter(organization=self.organization)
                 .select_related('responsible_user').order_by('-created_at', '-pk'),
         )
+        from .rkeg_reporting import current_manual_assessment, deadlines, evaluate_incident
+        evaluation = evaluate_incident(self.object)
+        context.update(rkeg_evaluation=evaluation, rkeg_deadlines=deadlines(self.object, evaluation),
+            rkeg_manual=current_manual_assessment(self.object, evaluation),
+            rkeg_history=self.object.rkeg_assessments.filter(organization=self.organization).select_related('assessed_by').order_by('-assessed_at', '-pk'),
+            incident_reports=self.object.reports.filter(organization=self.organization).order_by('-created_at', '-pk'))
         return context
 
 
