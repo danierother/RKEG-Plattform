@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core import signing
 
 from risks.models import Risk
+from services.models import CriticalService, Location
 from .models import Incident, IncidentAction, IncidentEvent
 
 
@@ -22,13 +23,16 @@ class IncidentForm(forms.ModelForm):
         model = Incident
         fields = ('title', 'description', 'occurred_at', 'detected_at', 'status', 'severity',
                   'incident_type', 'responsible_user', 'affected_service', 'affected_location',
-                  'impact_description', 'immediate_actions', 'suspected_reportable', 'reporting_status', 'risks')
+                  'impact_description', 'immediate_actions', 'suspected_reportable', 'reporting_status', 'risks',
+                  'affected_services', 'affected_locations')
         widgets = {
             'occurred_at': datetime_widget(), 'detected_at': datetime_widget(),
             'description': forms.Textarea(attrs={'rows': 4}),
             'impact_description': forms.Textarea(attrs={'rows': 4}),
             'immediate_actions': forms.Textarea(attrs={'rows': 4}),
             'risks': forms.CheckboxSelectMultiple(),
+            'affected_services': forms.CheckboxSelectMultiple(),
+            'affected_locations': forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, organization, user, **kwargs):
@@ -40,6 +44,8 @@ class IncidentForm(forms.ModelForm):
         self.fields['organization_context'].initial = signing.dumps(self.expected_context, salt='incident-form')
         self.fields['responsible_user'].queryset = responsible_users(organization)
         self.fields['risks'].queryset = Risk.objects.filter(organization=organization).order_by('title', 'pk')
+        self.fields['affected_services'].queryset = CriticalService.objects.filter(organization=organization).order_by('name', 'pk')
+        self.fields['affected_locations'].queryset = Location.objects.filter(organization=organization).order_by('name', 'pk')
         self.fields['severity'].choices = [(value, f'{value} - {label}') for value, label in Incident.Severity.choices]
 
     def clean_organization_context(self):
@@ -60,6 +66,7 @@ class IncidentForm(forms.ModelForm):
             ('Auswirkungen', ('impact_description', 'affected_service', 'affected_location', 'immediate_actions')),
             ('Meldepflichtpr\u00fcfung', ('suspected_reportable', 'reporting_status')),
             ('Verkn\u00fcpfte Risiken', ('risks',)),
+            ('Betroffene Strukturen', ('affected_services', 'affected_locations')),
         )
         return [{'title': title, 'fields': [self[name] for name in names]} for title, names in sections]
 

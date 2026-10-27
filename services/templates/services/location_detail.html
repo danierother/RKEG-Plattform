@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}{{ location.name }}{% endblock %}
+{% block content %}
+{% include 'services/nav.html' %}
+<div class="page-heading"><h1>{{ location.name }}</h1>{% if can_write_services %}<a class="button primary" href="{% url 'services:location-edit' location.pk %}">Bearbeiten</a>{% endif %}</div>
+<div class="prose">{{ location.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div>
+<dl class="details">
+  <div><dt>Organisation</dt><dd>{{ active_organization.name }}</dd></div>
+  <div><dt>Typ</dt><dd>{{ location.get_location_type_display }}</dd></div>
+  <div><dt>Aktivstatus</dt><dd>{{ location.is_active|yesno:'Aktiv,Inaktiv' }}</dd></div>
+  <div><dt>Adresse</dt><dd>{{ location.address_line|default:'Nicht hinterlegt' }}</dd></div>
+  <div><dt>Postleitzahl / Stadt</dt><dd>{{ location.postal_code }} {{ location.city }}</dd></div>
+  <div><dt>Land</dt><dd>{{ location.country|default:'Nicht hinterlegt' }}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ location.created_at|date:'d.m.Y H:i' }}</dd></div>
+  <div><dt>Ge&auml;ndert am</dt><dd>{{ location.updated_at|date:'d.m.Y H:i' }}</dd></div>
+</dl>
+<h2>Kritische Dienstleistungen</h2>
+{% if services %}<ul>{% for service in services %}<li><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a></li>{% endfor %}</ul>{% else %}<p>Keine Dienstleistungen zugeordnet</p>{% endif %}
+{% endblock %}

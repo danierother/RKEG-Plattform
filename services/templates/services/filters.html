@@ -1,0 +1,4 @@
+<form method="get" class="risk-filters">
+  {% for field in filter_form %}<div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+  <div class="filter-actions"><button type="submit" class="button primary">Anwenden</button><a class="button" href="{{ request.path }}">Filter zur&uuml;cksetzen</a></div>
+</form>

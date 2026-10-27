@@ -23,6 +23,8 @@
   <dl class="details"><div><dt>Betroffener Dienst</dt><dd>{{ incident.affected_service|default:'Nicht hinterlegt' }}</dd></div>
   <div><dt>Betroffener Standort</dt><dd>{{ incident.affected_location|default:'Nicht hinterlegt' }}</dd></div></dl>
 </section>
+<section class="description"><h2>Betroffene Dienstleistungen</h2>{% if affected_services %}<ul>{% for service in affected_services %}<li><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a></li>{% endfor %}</ul>{% else %}<p>Keine strukturierten Dienstleistungen zugeordnet</p>{% endif %}</section>
+<section class="description"><h2>Betroffene Standorte</h2>{% if affected_locations %}<ul>{% for location in affected_locations %}<li><a href="{% url 'services:location-detail' location.pk %}">{{ location.name }}</a></li>{% endfor %}</ul>{% else %}<p>Keine strukturierten Standorte zugeordnet</p>{% endif %}</section>
 <section class="description"><h2>Meldepflichtpr&uuml;fung</h2><dl class="details">
   <div><dt>Meldepflicht vermutet</dt><dd>{{ incident.suspected_reportable|yesno:'Ja,Nein' }}</dd></div>
   <div><dt>Meldepr&uuml;fung</dt><dd>{{ incident.get_reporting_status_display }}</dd></div>

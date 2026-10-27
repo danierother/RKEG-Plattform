@@ -4,7 +4,7 @@
 .status.severity-4 { color: #943b27; background: #faece6; }
 .status.severity-3 { color: #735706; background: #fff4cc; }
 .status.severity-1, .status.severity-2 { color: #275879; background: #e8f1f8; }
-.dashboard-incidents { margin-top: 40px; }
+.dashboard-incidents, .dashboard-services { margin-top: 40px; }
 .dashboard-incidents .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .incident-timeline { list-style: none; padding: 0; }
 .incident-timeline > li { border-top: 1px solid var(--line); padding: 20px 0; }

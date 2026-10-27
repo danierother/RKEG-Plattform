@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 from .assessment import calculate_score, classify_score
 from .models import Risk, RiskMeasure, RiskControl
+from services.models import CriticalService
 
 
 class RiskForm(forms.ModelForm):
@@ -12,7 +13,7 @@ class RiskForm(forms.ModelForm):
     class Meta:
         model = Risk
         fields = ('title', 'description', 'risk_source', 'potential_impact', 'status',
-                  'likelihood', 'impact', 'treatment_strategy', 'residual_likelihood', 'residual_impact')
+                  'likelihood', 'impact', 'treatment_strategy', 'residual_likelihood', 'residual_impact', 'critical_services')
         labels = {'title': 'Titel', 'description': 'Beschreibung', 'status': 'Status',
                   'likelihood': 'Brutto-Wahrscheinlichkeit', 'impact': 'Brutto-Auswirkung',
                   'risk_source': 'Risikoquelle / Ursache', 'potential_impact': 'M\u00f6gliche Auswirkungen',
@@ -20,9 +21,11 @@ class RiskForm(forms.ModelForm):
                   'treatment_strategy': 'Behandlungsstrategie'}
         widgets = {name: forms.Textarea(attrs={'rows': 4})
                    for name in ('description', 'risk_source', 'potential_impact')}
+        widgets['critical_services'] = forms.CheckboxSelectMultiple()
 
     def __init__(self, *args, organization, user, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['critical_services'].queryset = CriticalService.objects.filter(organization=organization).order_by('name', 'pk')
         self.expected_context = {'organization': organization.pk, 'user': user.pk}
         self.fields['organization_context'].initial = signing.dumps(
             self.expected_context, salt='risk-form-organization',
@@ -58,6 +61,7 @@ class RiskForm(forms.ModelForm):
             ('Bruttorisiko', ('likelihood', 'impact'), self.assessment, 'Bruttorisikowert'),
             ('Risikobehandlung', ('treatment_strategy',), None, ''),
             ('Restrisiko', ('residual_likelihood', 'residual_impact'), self.residual_assessment, 'Restrisikowert'),
+            ('Kritische Dienstleistungen', ('critical_services',), None, ''),
         )
         return [{'title': title, 'fields': [self[name] for name in fields], 'assessment': assessment,
                  'assessment_label': label} for title, fields, assessment, label in definitions]

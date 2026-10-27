@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{{ service.name }}{% endblock %}
+{% block content %}
+{% include 'services/nav.html' %}
+<div class="page-heading"><h1>{{ service.name }}</h1>{% if can_write_services %}<a class="button primary" href="{% url 'services:edit' service.pk %}">Bearbeiten</a>{% endif %}</div>
+<section class="description"><h2>&Uuml;berblick</h2><div class="prose">{{ service.description|linebreaksbr }}</div><dl class="details">
+  <div><dt>Organisation</dt><dd>{{ active_organization.name }}</dd></div>
+  <div><dt>Status</dt><dd>{{ service.get_status_display }}</dd></div>
+  <div><dt>Kritikalit&auml;t</dt><dd>{{ service.criticality }} - {{ service.get_criticality_display }}</dd></div>
+  <div><dt>Service Owner</dt><dd>{% if service.service_owner %}{{ service.service_owner.get_full_name|default:service.service_owner.username }}{% else %}Nicht zugewiesen{% endif %}</dd></div>
+  <div><dt>Recovery Priority</dt><dd>{{ service.recovery_priority }} - {{ service.get_recovery_priority_display }}</dd></div>
+</dl></section>
+<section class="description"><h2>Wiederherstellung</h2><dl class="details">
+  <div><dt>MTD (Tage HH:MM:SS)</dt><dd>{{ service.mtd_display }}</dd></div>
+  <div><dt>RTO (Tage HH:MM:SS)</dt><dd>{{ service.rto_display }}</dd></div>
+</dl></section>
+<section class="description"><h2>Standorte</h2>{% if locations %}<ul>{% for location in locations %}<li><a href="{% url 'services:location-detail' location.pk %}">{{ location.name }}</a> &middot; {{ location.get_location_type_display }} &middot; {{ location.is_active|yesno:'Aktiv,Inaktiv' }}</li>{% endfor %}</ul>{% else %}<p>Keine Standorte zugeordnet</p>{% endif %}</section>
+<section class="description">
+  <div class="section-heading"><h2>Abh&auml;ngigkeiten</h2>{% if can_write_services %}<a class="button" href="{% url 'services:dependency-create' service.pk %}">Abh&auml;ngigkeit hinzuf&uuml;gen</a>{% endif %}</div>
+  {% if dependencies %}<div class="table-scroll" tabindex="0" role="region" aria-label="Abh&auml;ngigkeiten"><table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Typ</th><th scope="col">Kritikalit&auml;t</th><th scope="col">Intern / extern</th><th scope="col">Single Point of Failure</th><th scope="col">Ausweichl&ouml;sung</th>{% if can_write_services %}<th scope="col">Aktion</th>{% endif %}</tr></thead><tbody>
+  {% for dependency in dependencies %}<tr><td><a href="{% url 'services:dependency-detail' service.pk dependency.pk %}">{{ dependency.name }}</a></td>
+    <td>{{ dependency.get_dependency_type_display }}</td><td>{{ dependency.criticality }} - {{ dependency.get_criticality_display }}</td><td>{{ dependency.get_internal_external_display }}</td>
+    <td>{{ dependency.single_point_of_failure|yesno:'Ja,Nein' }}</td><td>{{ dependency.contingency_available|yesno:'Ja,Nein' }}</td>
+    {% if can_write_services %}<td><a href="{% url 'services:dependency-edit' service.pk dependency.pk %}">Bearbeiten</a></td>{% endif %}</tr>{% endfor %}
+  </tbody></table></div>{% else %}<p>Keine Abh&auml;ngigkeiten vorhanden</p>{% endif %}
+</section>
+<section class="description"><h2>Zugeordnete Risiken</h2>{% if risks %}<ul>{% for risk in risks %}<li><a href="{% url 'risks:detail' risk.pk %}">{{ risk.title }}</a></li>{% endfor %}</ul>{% else %}<p>Keine Risiken zugeordnet</p>{% endif %}</section>
+<section class="description"><h2>Zugeordnete Vorf&auml;lle</h2>{% if incidents %}<ul>{% for incident in incidents %}<li><a href="{% url 'incidents:detail' incident.pk %}">{{ incident.title }}</a></li>{% endfor %}</ul>{% else %}<p>Keine Vorf&auml;lle zugeordnet</p>{% endif %}</section>
+<section class="description"><h2>Notizen</h2><div class="prose">{{ service.notes|default:'Keine Notizen hinterlegt.'|linebreaksbr }}</div></section>
+<dl class="details"><div><dt>Erstellt am</dt><dd>{{ service.created_at|date:'d.m.Y H:i' }}</dd></div><div><dt>Ge&auml;ndert am</dt><dd>{{ service.updated_at|date:'d.m.Y H:i' }}</dd></div></dl>
+{% endblock %}

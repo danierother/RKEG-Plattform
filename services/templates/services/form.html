@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{{ form_title }}{% endblock %}
+{% block content %}
+{% include 'services/nav.html' %}
+<a class="back-link" href="{{ back_url }}">Zur&uuml;ck</a>
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}{% if service %} / {{ service.name }}{% endif %}</div><h1>{{ form_title }} {% if object %}bearbeiten{% else %}anlegen{% endif %}</h1></div></div>
+<form method="post" class="form-stack constrained">{% csrf_token %}
+  {% if form.errors %}<div class="error-summary" role="alert"><strong>Bitte pr&uuml;fen Sie Ihre Eingaben.</strong>{{ form.non_field_errors }}{% for field in form.hidden_fields %}{{ field.errors }}{% endfor %}</div>{% endif %}
+  {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+  {% for field in form.visible_fields %}<div class="field">
+    {% if field.widget_type == 'checkbox' %}<label for="{{ field.id_for_label }}">{{ field }} {{ field.label }}</label>{% else %}{{ field.label_tag }}{{ field }}{% endif %}{{ field.errors }}
+  </div>{% endfor %}
+  <div class="form-actions"><button type="submit" class="button primary">Speichern</button><a class="button" href="{{ back_url }}">Abbrechen</a></div>
+</form>
+{% endblock %}

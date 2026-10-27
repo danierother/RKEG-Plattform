@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Standorte{% endblock %}
+{% block content %}
+{% include 'services/nav.html' %}
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>Standorte</h1></div>{% if can_write_services %}<a class="button primary" href="{% url 'services:location-create' %}">Neuer Standort</a>{% endif %}</div>
+{% include 'services/filters.html' %}
+<h2>Standorte ({{ paginator.count }})</h2>
+{% if locations %}<div class="table-scroll" tabindex="0" role="region" aria-label="Standorte"><table>
+<thead><tr><th scope="col">Name</th><th scope="col">Typ</th><th scope="col">Ort</th><th scope="col">Aktivstatus</th><th scope="col">Ge&auml;ndert am</th></tr></thead>
+<tbody>{% for location in locations %}<tr>
+  <td><a href="{% url 'services:location-detail' location.pk %}">{{ location.name }}</a></td><td>{{ location.get_location_type_display }}</td>
+  <td>{{ location.city|default:'Nicht hinterlegt' }}</td><td>{{ location.is_active|yesno:'Aktiv,Inaktiv' }}</td><td>{{ location.updated_at|date:'d.m.Y H:i' }}</td>
+</tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">Keine Standorte vorhanden</div>{% endif %}
+{% include 'services/pagination.html' %}
+{% endblock %}

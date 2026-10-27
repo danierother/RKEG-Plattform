@@ -39,6 +39,8 @@ class Risk(models.Model):
     description = models.TextField(blank=True)
     risk_source = models.TextField(blank=True)
     potential_impact = models.TextField(blank=True)
+    critical_services = models.ManyToManyField('services.CriticalService', blank=True, related_name='risks',
+                                               verbose_name='Kritische Dienstleistungen')
     status = models.CharField(max_length=32, choices=Status.choices, default=Status.OPEN)
     likelihood = models.PositiveSmallIntegerField(
         choices=Likelihood.choices, default=Likelihood.POSSIBLE,
@@ -97,8 +99,9 @@ class Risk(models.Model):
             self.measures.exclude(organization_id=self.organization_id).exists()
             or self.controls.exclude(organization_id=self.organization_id).exists()
             or self.incidents.exclude(organization_id=self.organization_id).exists()
+            or self.critical_services.exclude(organization_id=self.organization_id).exists()
         ):
-            raise ValidationError({'organization': 'Risiken mit Massnahmen, Kontrollen oder Vorfaellen koennen die Organisation nicht wechseln.'})
+            raise ValidationError({'organization': 'Risiken mit verknuepften Datensaetzen koennen die Organisation nicht wechseln.'})
 
     def save(self, *args, **kwargs):
         self.clean()

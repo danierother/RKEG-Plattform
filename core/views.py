@@ -5,6 +5,7 @@ from organizations.mixins import OrganizationContextMixin
 from risks.models import Risk
 from risks.assessment import DEFAULT_RISK_BANDS, score_expression
 from incidents.models import Incident
+from services.models import CriticalService
 
 
 class DashboardView(OrganizationContextMixin, TemplateView):
@@ -43,4 +44,14 @@ class DashboardView(OrganizationContextMixin, TemplateView):
             under_review=Count('pk', filter=Q(reporting_status=Incident.ReportingStatus.UNDER_REVIEW)),
         )
         context['recent_incidents'] = incidents.select_related('responsible_user').order_by('-created_at', '-pk')[:5]
+        services = self.organization.critical_services.all()
+        context['service_counts'] = services.aggregate(
+            active=Count('pk', filter=Q(status=CriticalService.Status.ACTIVE)),
+            critical=Count('pk', filter=Q(criticality__gte=4)),
+        )
+        context['dependency_counts'] = self.organization.service_dependencies.filter(
+            service__organization=self.organization,
+        ).aggregate(critical=Count('pk', filter=Q(criticality__gte=4)),
+                    single_points=Count('pk', filter=Q(single_point_of_failure=True)))
+        context['important_services'] = services.select_related('service_owner').order_by('-criticality', 'recovery_priority', 'name', 'pk')[:5]
         return context

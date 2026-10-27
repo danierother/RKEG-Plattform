@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ dependency.name }}{% endblock %}
+{% block content %}
+{% include 'services/nav.html' %}
+<a class="back-link" href="{% url 'services:detail' service.pk %}">Zur Dienstleistung</a>
+<div class="page-heading"><h1>{{ dependency.name }}</h1>{% if can_write_services %}<a class="button primary" href="{% url 'services:dependency-edit' service.pk dependency.pk %}">Bearbeiten</a>{% endif %}</div>
+<div class="prose">{{ dependency.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div>
+<dl class="details">
+  <div><dt>Dienstleistung</dt><dd><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a></dd></div>
+  <div><dt>Organisation</dt><dd>{{ active_organization.name }}</dd></div>
+  <div><dt>Typ</dt><dd>{{ dependency.get_dependency_type_display }}</dd></div>
+  <div><dt>Kritikalit&auml;t</dt><dd>{{ dependency.criticality }} - {{ dependency.get_criticality_display }}</dd></div>
+  <div><dt>Lieferant</dt><dd>{{ dependency.supplier_name|default:'Nicht hinterlegt' }}</dd></div>
+  <div><dt>Intern / extern</dt><dd>{{ dependency.get_internal_external_display }}</dd></div>
+  <div><dt>Single Point of Failure</dt><dd>{{ dependency.single_point_of_failure|yesno:'Ja,Nein' }}</dd></div>
+  <div><dt>Ausweichl&ouml;sung vorhanden</dt><dd>{{ dependency.contingency_available|yesno:'Ja,Nein' }}</dd></div>
+  <div><dt>Erstellt am</dt><dd>{{ dependency.created_at|date:'d.m.Y H:i' }}</dd></div>
+  <div><dt>Ge&auml;ndert am</dt><dd>{{ dependency.updated_at|date:'d.m.Y H:i' }}</dd></div>
+</dl><section class="description"><h2>Notizen</h2><div class="prose">{{ dependency.notes|default:'Keine Notizen hinterlegt.'|linebreaksbr }}</div></section>
+{% endblock %}

@@ -12,7 +12,7 @@ class RiskAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
     autocomplete_fields = ('organization', 'created_by')
     list_select_related = ('organization', 'created_by')
     readonly_fields = ('risk_score', 'risk_class', 'residual_risk_score', 'residual_risk_class',
-                       'created_at', 'updated_at')
+                       'created_at', 'updated_at', 'critical_services')
 
 
 @admin.register(RiskMeasure)
