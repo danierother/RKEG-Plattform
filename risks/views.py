@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from urllib.parse import urlencode
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -78,6 +79,7 @@ class RiskDetailView(OrganizationQuerysetMixin, DetailView):
         context['controls'] = self.object.controls.filter(
             organization=self.organization,
         ).select_related('responsible_user').order_by('-created_at', '-pk')
+        context['critical_services'] = self.object.critical_services.filter(organization=self.organization).order_by('name', 'pk')
         return context
 
 
@@ -104,7 +106,8 @@ class RiskFormMixin:
     def form_valid(self, form):
         if self.request.POST.get('action') == 'preview':
             return self.render_to_response(self.get_context_data(form=form))
-        response = super().form_valid(form)
+        with transaction.atomic():
+            response = super().form_valid(form)
         messages.success(self.request, 'Risiko wurde gespeichert.')
         return response
 

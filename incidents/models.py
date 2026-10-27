@@ -61,6 +61,10 @@ class Incident(models.Model):
                                      default=IncidentType.OTHER)
     affected_service = models.CharField('Betroffener Dienst', max_length=255, blank=True)
     affected_location = models.CharField('Betroffener Standort', max_length=255, blank=True)
+    affected_services = models.ManyToManyField('services.CriticalService', blank=True, related_name='incidents',
+                                               verbose_name='Betroffene Dienstleistungen')
+    affected_locations = models.ManyToManyField('services.Location', blank=True, related_name='incidents',
+                                                verbose_name='Betroffene Standorte')
     impact_description = models.TextField('Auswirkungen')
     immediate_actions = models.TextField('Bereits eingeleitete Sofortmassnahmen', blank=True)
     suspected_reportable = models.BooleanField('Meldepflicht vermutet', default=False)

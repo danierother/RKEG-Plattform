@@ -1,0 +1,4 @@
+<nav class="assessment-modes" aria-label="Dienstleistungen und Standorte">
+  <a href="{% url 'services:list' %}" {% if 'location' not in request.resolver_match.url_name %}aria-current="page"{% endif %}>Kritische Dienstleistungen</a>
+  <a href="{% url 'services:location-list' %}" {% if 'location' in request.resolver_match.url_name %}aria-current="page"{% endif %}>Standorte</a>
+</nav>

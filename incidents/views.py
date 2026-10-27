@@ -40,6 +40,8 @@ class IncidentDetailView(OrganizationQuerysetMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context.update(
             incident_query=self.request.GET.get('register', ''),
+            affected_services=self.object.affected_services.filter(organization=self.organization).order_by('name', 'pk'),
+            affected_locations=self.object.affected_locations.filter(organization=self.organization).order_by('name', 'pk'),
             linked_risks=self.object.risks.filter(organization=self.organization).order_by('title', 'pk'),
             events=self.object.events.filter(organization=self.organization)
                 .select_related('created_by').order_by('event_time', 'pk'),

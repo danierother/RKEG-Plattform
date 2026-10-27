@@ -4,6 +4,7 @@
 <a class="back-link" href="{% url 'risks:list' %}{% if register_query %}?{{ register_query }}{% endif %}">Zum Risikoregister</a>
 <div class="page-heading"><h1>{{ risk.title }}</h1>{% if can_write_risks %}<a class="button primary" href="{% url 'risks:edit' risk.pk %}{% if register_query %}?register={{ register_query|urlencode }}{% endif %}">Bearbeiten</a>{% endif %}</div>
 {% include 'risks/status.html' %}
+<section class="description"><h2>Kritische Dienstleistungen</h2>{% if critical_services %}<ul>{% for service in critical_services %}<li><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a></li>{% endfor %}</ul>{% else %}<p>Keine Dienstleistungen zugeordnet</p>{% endif %}</section>
 <section class="description"><h2>Risikobeschreibung</h2><div class="prose">{{ risk.description|default:'Keine Beschreibung hinterlegt.'|linebreaksbr }}</div>
 <h3>Risikoquelle / Ursache</h3><div class="prose">{{ risk.risk_source|default:'Nicht hinterlegt.'|linebreaksbr }}</div>
 <h3>M&ouml;gliche Auswirkungen</h3><div class="prose">{{ risk.potential_impact|default:'Nicht hinterlegt.'|linebreaksbr }}</div></section>

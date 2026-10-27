@@ -33,4 +33,15 @@
   <h3>Zuletzt angelegte Vorf&auml;lle</h3>
   {% include 'incidents/table.html' with incidents=recent_incidents %}
 </section>
+<section class="dashboard-services">
+  <div class="section-heading"><h2>Kritische Dienstleistungen</h2><a href="{% url 'services:list' %}">Alle Dienstleistungen</a></div>
+  <dl class="metrics">
+    <div><dt>Aktive Dienstleistungen</dt><dd>{{ service_counts.active }}</dd></div>
+    <div><dt>Kritikalit&auml;t 4 oder 5</dt><dd>{{ service_counts.critical }}</dd></div>
+    <div><dt>Kritische Abh&auml;ngigkeiten</dt><dd>{{ dependency_counts.critical }}</dd></div>
+    <div><dt>Single Points of Failure</dt><dd>{{ dependency_counts.single_points }}</dd></div>
+  </dl>
+  <h3>Wichtigste Dienstleistungen</h3>
+  {% if important_services %}<ul>{% for service in important_services %}<li><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a> &middot; Kritikalit&auml;t {{ service.criticality }} &middot; Recovery Priority {{ service.recovery_priority }}</li>{% endfor %}</ul>{% else %}<p>Keine Dienstleistungen vorhanden</p>{% endif %}
+</section>
 {% endblock %}

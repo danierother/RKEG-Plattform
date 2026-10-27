@@ -53,6 +53,7 @@ class OrganizationContextMixin(LoginRequiredMixin):
             memberships=self.memberships,
             can_write_risks=bool(self.membership and self.membership.role in RISK_WRITE_ROLES),
             can_write_incidents=bool(self.membership and self.membership.role in WRITE_ROLES),
+            can_write_services=bool(self.membership and self.membership.role in WRITE_ROLES),
         )
         return context
 

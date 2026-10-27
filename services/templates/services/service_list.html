@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Kritische Dienstleistungen{% endblock %}
+{% block content %}
+{% include 'services/nav.html' %}
+<div class="page-heading"><div><div class="eyebrow">{{ active_organization.name }}</div><h1>Kritische Dienstleistungen</h1></div>{% if can_write_services %}<a class="button primary" href="{% url 'services:create' %}">Neue Dienstleistung</a>{% endif %}</div>
+{% include 'services/filters.html' %}
+<h2>Dienstleistungen ({{ paginator.count }})</h2>
+{% if services %}<div class="table-scroll" tabindex="0" role="region" aria-label="Dienstleistungen"><table>
+<thead><tr><th scope="col">Name</th><th scope="col">Kritikalit&auml;t</th><th scope="col">Status</th><th scope="col">Recovery Priority</th><th scope="col">Service Owner</th><th scope="col">Standorte</th><th scope="col">Abh&auml;ngigkeiten</th><th scope="col">Ge&auml;ndert am</th></tr></thead>
+<tbody>{% for service in services %}<tr>
+  <td><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a></td><td>{{ service.criticality }} - {{ service.get_criticality_display }}</td>
+  <td>{{ service.get_status_display }}</td><td>{{ service.recovery_priority }} - {{ service.get_recovery_priority_display }}</td>
+  <td>{% if service.service_owner %}{{ service.service_owner.get_full_name|default:service.service_owner.username }}{% else %}Nicht zugewiesen{% endif %}</td>
+  <td>{{ service.location_count }}</td><td>{{ service.dependency_count }}</td><td>{{ service.updated_at|date:'d.m.Y H:i' }}</td>
+</tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">Keine Dienstleistungen vorhanden</div>{% endif %}
+{% include 'services/pagination.html' %}
+{% endblock %}
