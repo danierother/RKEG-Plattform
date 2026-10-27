@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core import signing
 
 from .models import CriticalService, Location, ServiceDependency
+from incidents.rkeg_rules import RULE_BY_CODE, SECTORS, SERVICE_CHOICES
 
 
 class OrganizationForm(forms.ModelForm):
@@ -33,10 +34,14 @@ class LocationForm(OrganizationForm):
 
 
 class CriticalServiceForm(OrganizationForm):
+    rkeg_sector = forms.ChoiceField(label='RKEG-Sektor', required=False, choices=[('', 'Nicht zugeordnet')] + list(SECTORS))
+    rkeg_service_code = forms.ChoiceField(label='Wesentlicher Dienst laut Bescheid', required=False,
+                                        choices=[('', 'Nicht zugeordnet')] + SERVICE_CHOICES)
     class Meta:
         model = CriticalService
         fields = ('name', 'description', 'service_owner', 'status', 'criticality', 'recovery_priority',
-                  'maximum_tolerable_downtime', 'recovery_time_objective', 'locations', 'notes')
+                  'maximum_tolerable_downtime', 'recovery_time_objective', 'locations', 'notes',
+                  'rkeg_sector', 'rkeg_service_code', 'rkeg_service_reference')
         widgets = {'description': forms.Textarea(attrs={'rows': 4}), 'notes': forms.Textarea(attrs={'rows': 4}),
                    'locations': forms.CheckboxSelectMultiple(),
                    'maximum_tolerable_downtime': forms.TextInput(attrs={'placeholder': '1 00:00:00'}),
@@ -53,6 +58,14 @@ class CriticalServiceForm(OrganizationForm):
         ).order_by('username')
         for field in ('criticality', 'recovery_priority'):
             self.fields[field].choices = [(value, f'{value} - {label}') for value, label in self.fields[field].choices]
+
+    def clean(self):
+        data = super().clean()
+        rule = RULE_BY_CODE.get(data.get('rkeg_service_code'))
+        if rule and rule.sector != data.get('rkeg_sector'):
+            self.add_error('rkeg_service_code', 'Der Dienst gehoert nicht zum ausgewaehlten Sektor.')
+        self.instance.rkeg_subsector = rule.subsector if rule else ''
+        return data
 
 
 class ServiceDependencyForm(forms.ModelForm):

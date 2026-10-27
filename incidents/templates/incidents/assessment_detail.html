@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Dokumentierte RKEG-Bewertung{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'incidents:detail' incident.pk %}">Zum Vorfall</a>
+<h1>Dokumentierte RKEG-Bewertung</h1>
+<p class="rkeg-result rkeg-{{ assessment.result }}">{{ assessment.get_result_display }}{% if assessment.manual_override %} / MANUELLE BEWERTUNG{% endif %}</p>
+<p>{{ assessment.explanation }}</p>
+<dl class="details">
+<div><dt>Zeitpunkt / Bearbeiter</dt><dd>{{ assessment.assessed_at|date:'d.m.Y H:i:s' }} / {{ assessment.assessed_by }}</dd></div>
+<div><dt>Regelversion</dt><dd>{{ assessment.rule_version }}</dd></div>
+<div><dt>Rechtsgrundlage</dt><dd>{{ assessment.legal_reference }}</dd></div>
+<div><dt>Dokumentierte Einstufung</dt><dd>{{ assessment.input_snapshot.rkeg_classified|yesno:'Ja,Nein,Unbekannt' }} / {{ assessment.input_snapshot.classification_reference|default:'Nicht hinterlegt' }}</dd></div>
+<div><dt>Dokumentierter Meldepflichtbeginn</dt><dd>{{ assessment.input_snapshot.obligation_start|default:'Nicht hinterlegt' }}</dd></div>
+</dl>
+{% if assessment.manual_override %}<h2>Begr&uuml;ndung</h2><div class="prose">{{ assessment.manual_override_reason|linebreaksbr }}</div><a href="{% url 'incidents:assessment-detail' incident.pk assessment.based_on_id %}">Urspr&uuml;ngliches automatisches Ergebnis</a>{% endif %}
+{% include 'incidents/reporting_results.html' with results=assessment.applied_rule editable=False %}
+{% endblock %}

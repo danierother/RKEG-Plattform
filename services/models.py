@@ -57,6 +57,11 @@ class Location(OrganizationRecord):
 class CriticalService(OrganizationRecord):
     Criticality = Criticality
 
+    rkeg_sector = models.CharField('RKEG-Sektor', max_length=32, blank=True)
+    rkeg_subsector = models.CharField('RKEG-Teilsektor', max_length=100, blank=True)
+    rkeg_service_code = models.CharField('Wesentlicher Dienst (RKEV)', max_length=40, blank=True)
+    rkeg_service_reference = models.CharField('Dienstzuordnung im Einstufungsbescheid', max_length=500, blank=True)
+
     class Status(models.TextChoices):
         ACTIVE = 'ACTIVE', 'Aktiv'
         INACTIVE = 'INACTIVE', 'Inaktiv'

@@ -1,0 +1,18 @@
+{% for item in results %}
+<section class="description">
+  <h3>{{ item.service_name }}</h3>
+  <p class="rkeg-result rkeg-{{ item.result }}">{{ item.label }}</p>
+  <dl class="details">
+    <div><dt>Sektor / Teilsektor</dt><dd>{{ item.sector_label|default:'Nicht hinterlegt' }} / {{ item.subsector|default:'Kein Teilsektor' }}</dd></div>
+    <div><dt>Dienst / Bescheidreferenz</dt><dd>{{ item.service_code|default:'Nicht hinterlegt' }} / {{ item.service_reference|default:'Nicht hinterlegt' }}</dd></div>
+    <div><dt>Angewandte Regel</dt><dd>{{ item.rule.legal_reference|default:'Keine passende Regel' }}<br>{{ item.rule.label }}</dd></div>
+    <div><dt>St&ouml;rungsart</dt><dd>{{ item.disruption_label|default:'Nicht hinterlegt' }}</dd></div>
+    <div><dt>Dauer</dt><dd>{{ item.duration|default:'Nicht berechenbar' }}</dd></div>
+    <div><dt>Nutzerstunden</dt><dd>{{ item.user_hours|default_if_none:'Nicht berechnet' }}</dd></div>
+    <div><dt>Z&auml;hlpunktstunden</dt><dd>{{ item.metering_point_hours|default_if_none:'Nicht berechnet' }}</dd></div>
+    <div><dt>Schwelle</dt><dd>{% if item.threshold_value != None %}&gt; {{ item.threshold_value }} {{ item.unit }}{% else %}{{ item.unit|default:'Nicht bestimmt' }}{% endif %}</dd></div>
+  </dl>
+  <p>{{ item.explanation }}</p>
+  {% if editable and can_write_incidents %}<a href="{% url 'incidents:service-impact' incident.pk item.service_id %}">Dienstbezogene Pr&uuml;fdaten bearbeiten</a>{% endif %}
+</section>
+{% endfor %}

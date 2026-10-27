@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}RKEG-Einstufung dokumentieren{% endblock %}
+{% block content %}
+<h1>RKEG-Einstufung dokumentieren</h1><p>{{ active_organization.name }}</p>
+<form method="post" class="form-stack constrained">{% csrf_token %}{% include 'includes/form_fields.html' %}
+<div class="form-actions"><button class="button primary" type="submit">Speichern</button><a class="button" href="{% url 'organizations:detail' %}">Abbrechen</a></div></form>
+{% endblock %}

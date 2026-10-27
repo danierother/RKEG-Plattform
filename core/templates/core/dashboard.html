@@ -44,4 +44,12 @@
   <h3>Wichtigste Dienstleistungen</h3>
   {% if important_services %}<ul>{% for service in important_services %}<li><a href="{% url 'services:detail' service.pk %}">{{ service.name }}</a> &middot; Kritikalit&auml;t {{ service.criticality }} &middot; Recovery Priority {{ service.recovery_priority }}</li>{% endfor %}</ul>{% else %}<p>Keine Dienstleistungen vorhanden</p>{% endif %}
 </section>
+<section class="dashboard-services"><div class="section-heading"><h2>RKEG-Meldepr&uuml;fung</h2><a href="{% url 'incidents:list' %}">Vorf&auml;lle</a></div>
+<dl class="metrics">
+<div><dt>Meldepflichtige offene Vorf&auml;lle</dt><dd>{{ rkeg_counts.reportable_open }}</dd></div>
+<div><dt>Erstmeldungen binnen 24 h f&auml;llig</dt><dd>{{ rkeg_counts.initial_due }}</dd></div>
+<div><dt>&Uuml;berf&auml;llige Erstmeldungen</dt><dd>{{ rkeg_counts.initial_overdue }}</dd></div>
+<div><dt>Folgemeldungen f&auml;llig / binnen 24 h</dt><dd>{{ rkeg_counts.follow_up_due }}</dd></div>
+<div><dt>Manuelle Pr&uuml;fungen offen</dt><dd>{{ rkeg_counts.manual_review }}</dd></div>
+</dl></section>
 {% endblock %}
