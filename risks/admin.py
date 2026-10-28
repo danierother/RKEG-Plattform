@@ -2,10 +2,11 @@ from django.contrib import admin
 
 from core.admin import SuperuserOnlyAdminMixin
 from .models import Risk, RiskMeasure, RiskControl
+from audit.admin import AuditedAdminMixin
 
 
 @admin.register(Risk)
-class RiskAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
+class RiskAdmin(AuditedAdminMixin, SuperuserOnlyAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'organization', 'status', 'created_by', 'updated_at')
     list_filter = ('status', 'organization')
     search_fields = ('title', 'description', 'organization__name')
@@ -16,7 +17,7 @@ class RiskAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(RiskMeasure)
-class RiskMeasureAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
+class RiskMeasureAdmin(AuditedAdminMixin, SuperuserOnlyAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'risk', 'organization', 'status', 'responsible_user', 'due_date')
     list_filter = ('status', 'organization')
     search_fields = ('title', 'risk__title')

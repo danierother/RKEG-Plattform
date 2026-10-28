@@ -1,0 +1,4 @@
+<section class="report-section"><h2>{{ table.title }}</h2>
+<div class="table-scroll"><table class="report-table"><thead><tr>{% for heading in table.headings %}<th scope="col">{{ heading }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in table.rows %}<tr>{% for cell in row.cells %}<td>{% if forloop.first and row.url %}<a href="{{ row.url }}">{{ cell }}</a>{% else %}{{ cell }}{% endif %}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="{{ table.headings|length }}">Keine Datens&auml;tze vorhanden.</td></tr>{% endfor %}
+</tbody></table></div></section>

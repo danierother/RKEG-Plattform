@@ -10,6 +10,7 @@ from organizations.mixins import OrganizationQuerysetMixin, OrganizationWritePer
 from .filters import IncidentFilterForm
 from .forms import IncidentActionForm, IncidentEventForm, IncidentForm
 from .models import Incident, IncidentAction, IncidentEvent
+from audit.mixins import AuditFormMixin, AuditHistoryMixin
 
 
 class IncidentListView(OrganizationQuerysetMixin, ListView):
@@ -28,7 +29,7 @@ class IncidentListView(OrganizationQuerysetMixin, ListView):
         return context
 
 
-class IncidentDetailView(OrganizationQuerysetMixin, DetailView):
+class IncidentDetailView(OrganizationQuerysetMixin, AuditHistoryMixin, DetailView):
     model = Incident
     template_name = 'incidents/detail.html'
     context_object_name = 'incident'
@@ -57,7 +58,7 @@ class IncidentDetailView(OrganizationQuerysetMixin, DetailView):
         return context
 
 
-class IncidentFormMixin:
+class IncidentFormMixin(AuditFormMixin):
     model = Incident
     form_class = IncidentForm
     template_name = 'incidents/form.html'
@@ -117,19 +118,19 @@ class IncidentChildMixin(OrganizationQuerysetMixin):
         return reverse('incidents:detail', args=[self.get_incident().pk])
 
 
-class IncidentEventCreateView(IncidentChildMixin, OrganizationWritePermissionMixin, CreateView):
+class IncidentEventCreateView(IncidentChildMixin, OrganizationWritePermissionMixin, AuditFormMixin, CreateView):
     model = IncidentEvent
     form_class = IncidentEventForm
     template_name = 'incidents/event_form.html'
 
 
-class IncidentActionCreateView(IncidentChildMixin, OrganizationWritePermissionMixin, CreateView):
+class IncidentActionCreateView(IncidentChildMixin, OrganizationWritePermissionMixin, AuditFormMixin, CreateView):
     model = IncidentAction
     form_class = IncidentActionForm
     template_name = 'incidents/action_form.html'
 
 
-class IncidentActionUpdateView(IncidentChildMixin, OrganizationWritePermissionMixin, UpdateView):
+class IncidentActionUpdateView(IncidentChildMixin, OrganizationWritePermissionMixin, AuditFormMixin, UpdateView):
     model = IncidentAction
     form_class = IncidentActionForm
     template_name = 'incidents/action_form.html'

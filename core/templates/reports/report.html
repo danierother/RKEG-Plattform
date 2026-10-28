@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ report_title }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'core/reports.css' %}">{% endblock %}
+{% block content %}
+<article class="report {% if report_type == 'management' %}report-management{% endif %} {% if print_view %}print-preview{% endif %}">
+<div class="report-tools"><a href="{% url 'reports:index' %}">Alle Berichte</a>
+<a class="button" href="{% url 'reports:'|add:report_type|add:'-print' %}{% if filter_query %}?{{ filter_query }}{% endif %}">Druckansicht</a>
+{% if report_type != 'management' %}<a class="button" href="{% url 'reports:'|add:report_type %}?format=csv{% if filter_query %}&amp;{{ filter_query }}{% endif %}">CSV exportieren</a>{% endif %}</div>
+<header class="report-heading"><h1>{{ report_title }}</h1><h2>{{ active_organization.name }}</h2>
+<p>{{ report_created_at|date:'d.m.Y H:i:s' }} &middot; {{ report_actor.get_full_name|default:report_actor.username }}</p>
+<p>{{ filter_description }}</p><p class="muted">Prototyp / interne Dokumentation</p></header>
+{% if filter_form and not print_view %}<form method="get" class="report-filters">{{ filter_form.as_p }}<button class="button primary" type="submit">Filtern</button><a class="button" href="{% url 'reports:'|add:report_type %}">Zur&uuml;cksetzen</a></form>{% endif %}
+{% if print_view and filter_form.errors %}<div class="form-errors">{{ filter_form.errors }}</div>{% endif %}
+{% if metrics %}<dl class="report-metrics">{% for label, value in metrics %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
+{% for table in tables %}{% include 'reports/table.html' %}{% endfor %}
+{% if not print_view %}{% include 'services/pagination.html' %}{% endif %}
+</article>
+{% endblock %}

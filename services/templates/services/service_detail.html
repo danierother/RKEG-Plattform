@@ -33,4 +33,5 @@
 <div><dt>Sektor / Teilsektor</dt><dd>{{ service.rkeg_sector|default:'Nicht hinterlegt' }} / {{ service.rkeg_subsector|default:'Kein Teilsektor' }}</dd></div>
 <div><dt>Dienstcode</dt><dd>{{ service.rkeg_service_code|default:'Nicht hinterlegt' }}</dd></div>
 <div><dt>Bescheidreferenz</dt><dd>{{ service.rkeg_service_reference|default:'Nicht hinterlegt' }}</dd></div></dl></section>
+{% include 'audit/history.html' %}
 {% endblock %}

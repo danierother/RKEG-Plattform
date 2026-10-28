@@ -8,9 +8,10 @@ from .models import Incident, IncidentReport, IncidentRKEGAssessment, IncidentSe
 from .reporting_forms import AssessmentForm, IncidentReportForm, ReportingFactsForm, ServiceImpactForm
 from .rkeg_reporting import record_assessment
 from .views import IncidentChildMixin
+from audit.mixins import AuditFormMixin
 
 
-class ReportingPageMixin:
+class ReportingPageMixin(AuditFormMixin):
     template_name = 'incidents/reporting_form.html'
     page_title = 'RKEG-Meldepruefung'
 
@@ -67,7 +68,7 @@ class AssessmentCreateView(IncidentChildMixin, OrganizationWritePermissionMixin,
         return kwargs
 
     def form_valid(self, form):
-        assessment = record_assessment(self.get_incident(), self.request.user, **form.cleaned_data)
+        assessment = record_assessment(self.get_incident(), self.request.user, source='WEB', **form.cleaned_data)
         return redirect('incidents:assessment-detail', incident_pk=self.get_incident().pk, pk=assessment.pk)
 
 

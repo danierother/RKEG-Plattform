@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Audit-Trail{% endblock %}
+{% block content %}<h1>Audit-Trail</h1>
+<form method="get" class="audit-filters">{{ filter_form.as_p }}<div class="form-actions"><button class="button" type="submit">Filtern</button><a class="button" href="{% url 'audit:list' %}">Zur&uuml;cksetzen</a></div></form>
+{% include 'audit/table.html' %}
+{% include 'services/pagination.html' %}
+{% endblock %}

@@ -2,10 +2,11 @@ from django.contrib import admin
 
 from core.admin import SuperuserOnlyAdminMixin
 from .models import Membership, Organization
+from audit.admin import AuditedAdminMixin
 
 
 @admin.register(Organization)
-class OrganizationAdmin(SuperuserOnlyAdminMixin, admin.ModelAdmin):
+class OrganizationAdmin(AuditedAdminMixin, SuperuserOnlyAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'legal_name', 'created_at', 'updated_at')
     search_fields = ('name', 'legal_name')
     readonly_fields = ('created_at', 'updated_at')
