@@ -10,6 +10,7 @@ from .forms import RiskForm, RiskMeasureForm, RiskControlForm
 from .models import Risk, RiskMeasure, RiskControl
 from .filters import RiskFilterForm
 from .assessment import calculate_score, classify_score
+from audit.mixins import AuditFormMixin, AuditHistoryMixin
 
 
 class RiskListView(OrganizationQuerysetMixin, ListView):
@@ -62,7 +63,7 @@ class RiskMatrixView(OrganizationQuerysetMixin, ListView):
         return context
 
 
-class RiskDetailView(OrganizationQuerysetMixin, DetailView):
+class RiskDetailView(OrganizationQuerysetMixin, AuditHistoryMixin, DetailView):
     model = Risk
     template_name = 'risks/detail.html'
     context_object_name = 'risk'
@@ -83,7 +84,7 @@ class RiskDetailView(OrganizationQuerysetMixin, DetailView):
         return context
 
 
-class RiskFormMixin:
+class RiskFormMixin(AuditFormMixin):
     model = Risk
     form_class = RiskForm
     template_name = 'risks/form.html'
@@ -140,7 +141,7 @@ class RiskMeasureParentMixin(OrganizationQuerysetMixin):
         return context
 
 
-class RiskMeasureFormMixin:
+class RiskMeasureFormMixin(AuditFormMixin):
     model = RiskMeasure
     form_class = RiskMeasureForm
     template_name = 'risks/measure_form.html'

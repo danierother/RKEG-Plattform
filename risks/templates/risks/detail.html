@@ -56,4 +56,5 @@
   <div><dt>Erstellt am</dt><dd>{{ risk.created_at|date:'d.m.Y H:i' }}</dd></div>
   <div><dt>Zuletzt ge&auml;ndert</dt><dd>{{ risk.updated_at|date:'d.m.Y H:i' }}</dd></div>
 </dl>
+{% include 'audit/history.html' %}
 {% endblock %}

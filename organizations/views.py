@@ -3,6 +3,7 @@ from django.views.generic import FormView, TemplateView
 from django.urls import reverse
 from django.core import signing
 from django import forms
+from audit.services import audited_change
 
 from .forms import OrganizationSelectionForm
 from .forms import OrganizationRKEGForm
@@ -60,5 +61,6 @@ class OrganizationRKEGView(OrganizationContextMixin, OrganizationWritePermission
         if context != {'org': self.organization.pk, 'user': self.request.user.pk}:
             form.add_error(None, 'Organisationskontext geaendert. Formular neu laden.')
             return self.form_invalid(form)
-        form.save()
+        with audited_change(self.organization, organization=self.organization, actor=self.request.user, source='WEB'):
+            form.save()
         return redirect(reverse('organizations:detail'))

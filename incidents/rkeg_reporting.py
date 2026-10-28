@@ -6,11 +6,15 @@ from decimal import Decimal, localcontext
 
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Prefetch
 from django.utils import timezone
 
 from organizations.mixins import WRITE_ROLES
 from .models import Incident, IncidentRKEGAssessment, IncidentReport, RKEGFacts
 from .rkeg_rules import EFFECTIVE_FROM, EXEMPT_SECTORS, RULE_BY_CODE, RULE_VERSION, SECTORS
+from audit.services import record_change
+from services.models import CriticalService
+from .models import IncidentServiceImpact
 
 Result = IncidentRKEGAssessment.Result
 LEGAL_REFERENCE = 'RKEG BGBl. I 60/2025 § 17, § 18 Abs. 3; RKEV BGBl. II 91/2026 §§ 2-14'
@@ -132,8 +136,9 @@ def evaluate_service(organization, service, facts, now):
 def evaluate_incident(incident, now=None):
     now = now or timezone.now()
     org = incident.organization
-    services = list(incident.affected_services.filter(organization=org).order_by('pk'))
-    impacts = {row.service_id: row for row in incident.service_impacts.filter(organization=org, service__organization=org)}
+    services = incident.reporting_services if hasattr(incident, 'reporting_services') else list(incident.affected_services.filter(organization=org).order_by('pk'))
+    impact_rows = incident.reporting_impacts if hasattr(incident, 'reporting_impacts') else incident.service_impacts.filter(organization=org, service__organization=org)
+    impacts = {row.service_id: row for row in impact_rows}
     snapshot = {'organization_id': org.pk, 'rkeg_classified': org.rkeg_classified,
                 'classification_reference': org.rkeg_classification_reference,
                 'obligation_start': serialized(org.rkeg_reporting_obligation_start_date),
@@ -158,7 +163,7 @@ def require_writer(incident, user):
 
 
 @transaction.atomic
-def record_assessment(incident, user, override_result='', override_reason=''):
+def record_assessment(incident, user, override_result='', override_reason='', *, source='SYSTEM'):
     require_writer(incident, user)
     evaluation = evaluate_incident(incident)
     single = evaluation.details[0] if len(evaluation.details) == 1 else {}
@@ -168,12 +173,15 @@ def record_assessment(incident, user, override_result='', override_reason=''):
         calculated_duration=timedelta(microseconds=single['duration_microseconds']) if 'duration_microseconds' in single else None,
         calculated_user_hours=single.get('user_hours'), calculated_metering_point_hours=single.get('metering_point_hours'),
         threshold_value=single.get('threshold_value'), explanation=evaluation.explanation, rule_version=RULE_VERSION)
+    record_change(automatic, None, organization=incident.organization, actor=user, source=source)
     if override_result:
-        return IncidentRKEGAssessment.objects.create(incident=incident, organization=incident.organization,
+        manual = IncidentRKEGAssessment.objects.create(incident=incident, organization=incident.organization,
             assessed_by=user, result=override_result, based_on=automatic, manual_override=True,
             manual_override_reason=override_reason, applied_rule=evaluation.details, input_snapshot=evaluation.snapshot,
             legal_reference=LEGAL_REFERENCE, explanation='Manuelle fachliche Bewertung; automatisches Ergebnis bleibt erhalten.',
             rule_version=RULE_VERSION)
+        record_change(manual, None, organization=incident.organization, actor=user, source=source)
+        return manual
     return automatic
 
 
@@ -185,7 +193,7 @@ def add_calendar_month(value):
 
 
 def current_manual_assessment(incident, evaluation):
-    latest = incident.rkeg_assessments.filter(organization_id=incident.organization_id).order_by('-assessed_at', '-pk').first()
+    latest = next(iter(incident.reporting_assessments), None) if hasattr(incident, 'reporting_assessments') else incident.rkeg_assessments.filter(organization_id=incident.organization_id).order_by('-assessed_at', '-pk').first()
     if not latest or not latest.manual_override or latest.rule_version != RULE_VERSION or latest.input_snapshot != evaluation.snapshot:
         return None
     keys = ('service_id', 'sector', 'subsector', 'service_code', 'service_reference', 'facts')
@@ -200,14 +208,14 @@ def current_manual_assessment(incident, evaluation):
 
 def deadlines(incident, evaluation, now=None):
     now = now or timezone.now()
-    reports = list(incident.reports.filter(organization_id=incident.organization_id,
+    reports = [row for row in incident.reporting_reports if row.status == IncidentReport.Status.MARKED_AS_SUBMITTED] if hasattr(incident, 'reporting_reports') else list(incident.reports.filter(organization_id=incident.organization_id,
         status=IncidentReport.Status.MARKED_AS_SUBMITTED).order_by('submitted_at', 'pk'))
     first = next((row for row in reports if row.report_type == 'INITIAL'), None)
     follow = any(row.report_type == 'FOLLOW_UP' and first and row.submitted_at >= first.submitted_at for row in reports)
     end_reported = any(row.report_type == 'END_NOTIFICATION' for row in reports)
     reportable = evaluation.result == Result.REPORTABLE
     # Already documented reportable snapshots keep reporting work visible after edits.
-    recorded_reportable = incident.rkeg_assessments.filter(organization_id=incident.organization_id, result=Result.REPORTABLE).exists()
+    recorded_reportable = any(row.result == Result.REPORTABLE for row in incident.reporting_assessments) if hasattr(incident, 'reporting_assessments') else incident.rkeg_assessments.filter(organization_id=incident.organization_id, result=Result.REPORTABLE).exists()
     required = reportable or recorded_reportable or first is not None
     initial_due = (incident.rkeg_awareness_at.astimezone(dt_timezone.utc) + timedelta(hours=24)) if required and incident.rkeg_awareness_at else None
     follow_due = add_calendar_month(first.submitted_at) if first else None
@@ -224,7 +232,7 @@ def deadlines(incident, evaluation, now=None):
 
 def reporting_dashboard(organization):
     counts = dict(reportable_open=0, initial_due=0, initial_overdue=0, follow_up_due=0, manual_review=0)
-    for incident in Incident.objects.filter(organization=organization).select_related('organization').prefetch_related('affected_services'):
+    for incident in reporting_queryset(organization):
         evaluation = evaluate_incident(incident)
         timing = deadlines(incident, evaluation)
         manual = current_manual_assessment(incident, evaluation)
@@ -237,3 +245,13 @@ def reporting_dashboard(organization):
         counts['manual_review'] += (effective_result in (Result.INSUFFICIENT_DATA, Result.MANUAL_REVIEW, Result.NOT_ASSESSED)
                                     or timing['missing_awareness'])
     return counts
+
+
+def reporting_queryset(organization):
+    """Bounded query count for reports; every prefetched relation is tenant-scoped."""
+    return Incident.objects.filter(organization=organization).select_related('organization', 'responsible_user').prefetch_related(
+        Prefetch('affected_services', queryset=CriticalService.objects.filter(organization=organization).order_by('pk'), to_attr='reporting_services'),
+        Prefetch('service_impacts', queryset=IncidentServiceImpact.objects.filter(organization=organization, service__organization=organization), to_attr='reporting_impacts'),
+        Prefetch('reports', queryset=IncidentReport.objects.filter(organization=organization).order_by('submitted_at', 'pk'), to_attr='reporting_reports'),
+        Prefetch('rkeg_assessments', queryset=IncidentRKEGAssessment.objects.filter(organization=organization).order_by('-assessed_at', '-pk'), to_attr='reporting_assessments'),
+    )

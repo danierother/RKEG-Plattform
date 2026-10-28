@@ -159,3 +159,8 @@ td { max-width: 300px; min-width: 130px; overflow-wrap: anywhere; }
 .rkeg-REPORTABLE { border-color: #b42318; background: #fef3f2; color: #912018; }
 .rkeg-MANUAL_REVIEW, .rkeg-INSUFFICIENT_DATA { border-color: #a15c00; background: #fff8e6; color: #714300; }
 .rkeg-BELOW_THRESHOLD { border-color: #167353; background: #edf8f2; color: #14583f; }
+.audit-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 20px; align-items: end; margin-bottom: 24px; }
+.audit-filters p { display: grid; gap: 6px; margin: 0; }
+.audit-filters input, .audit-filters select { width: 100%; min-width: 0; }
+.audit-table { min-width: 760px; }
+.audit-table td { vertical-align: top; overflow-wrap: anywhere; max-width: 360px; }

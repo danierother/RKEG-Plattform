@@ -20,6 +20,8 @@ from django.urls import include, path
 from core.views import DashboardView
 
 urlpatterns = [
+    path('audit/', include('audit.urls')),
+    path('reports/', include('core.report_urls')),
     path('', DashboardView.as_view(), name='home'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('', include('accounts.urls')),

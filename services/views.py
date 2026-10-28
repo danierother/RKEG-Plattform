@@ -8,6 +8,7 @@ from organizations.mixins import OrganizationQuerysetMixin, OrganizationWritePer
 from .filters import LocationFilterForm, ServiceFilterForm
 from .forms import CriticalServiceForm, LocationForm, ServiceDependencyForm
 from .models import CriticalService, Location, ServiceDependency
+from audit.mixins import AuditFormMixin, AuditHistoryMixin
 
 
 class FilteredListMixin:
@@ -54,7 +55,7 @@ class LocationDetailView(OrganizationQuerysetMixin, DetailView):
         return context
 
 
-class ServiceDetailView(OrganizationQuerysetMixin, DetailView):
+class ServiceDetailView(OrganizationQuerysetMixin, AuditHistoryMixin, DetailView):
     model = CriticalService
     template_name = 'services/service_detail.html'
     context_object_name = 'service'
@@ -69,7 +70,7 @@ class ServiceDetailView(OrganizationQuerysetMixin, DetailView):
         return context
 
 
-class OrganizationFormMixin:
+class OrganizationFormMixin(AuditFormMixin):
     template_name = 'services/form.html'
 
     def get_form_kwargs(self):
@@ -144,7 +145,7 @@ class DependencyDetailView(DependencyParentMixin, DetailView):
     context_object_name = 'dependency'
 
 
-class DependencyFormMixin:
+class DependencyFormMixin(AuditFormMixin):
     form_class = ServiceDependencyForm
     template_name = 'services/form.html'
 
