@@ -17,7 +17,8 @@
 @page { size: A4 landscape; margin: 12mm; }
 @page management { size: A4 portrait; margin: 15mm; }
 @media print {
-  .header, .sidebar, .skip-link, .report-tools, .report-filters, .pagination, .messages { display: none !important; }
+  .header, .sidebar, .skip-link, .report-tools, .report-filters, .pagination, .messages, .notice { display: none !important; }
+  .demo-banner { background: white; color: black; border: 1px solid black; }
   html, body, .workspace, .main { display: block; background: white; color: black; margin: 0; padding: 0; width: auto; min-width: 0; max-width: none; }
   .report-management { page: management; }
   .report-heading h1 { font-size: 18pt; }

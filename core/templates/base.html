@@ -15,7 +15,7 @@
     <a class="brand" href="{% url 'dashboard' %}"><img src="{% static 'core/brand.svg' %}" width="32" height="32" alt="">RKEG<span>Plattform</span></a>
     {% if user.is_authenticated %}
       <div class="account"><span>{{ user.get_full_name|default:user.username }}</span>
-        <form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button class="text-button" type="submit">Logout</button></form>
+        <form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button class="text-button" type="submit">Abmelden</button></form>
       </div>
     {% endif %}
   </header>
@@ -39,6 +39,7 @@
     </aside>
   {% endif %}
     <main id="main" class="{% if user.is_authenticated %}main{% else %}public-main{% endif %}">
+      {% if active_organization and 'DEMO / TESTDATEN' in active_organization.legal_name %}<p class="demo-banner" role="note">DEMO / TESTDATEN</p>{% endif %}
       {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
       {% block content %}{% endblock %}
     </main>
