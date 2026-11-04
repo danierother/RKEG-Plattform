@@ -9,8 +9,10 @@ from django.conf import settings
 class RedactingFormatter(logging.Formatter):
     def format(self, record):
         text = super().format(record)
-        secrets = [settings.SECRET_KEY, os.environ.get('DEMO_PASSWORD', '')]
+        secrets = [settings.SECRET_KEY, os.environ.get('DEMO_PASSWORD', ''),
+                   os.environ.get('POSTGRES_PASSWORD', '')]
         secrets.extend(settings.SECRET_KEY_FALLBACKS)
+        secrets.extend(database.get('PASSWORD', '') for database in settings.DATABASES.values())
         for secret in secrets:
             if secret:
                 text = text.replace(secret, '[REDACTED]')
@@ -18,7 +20,7 @@ class RedactingFormatter(logging.Formatter):
         text = re.sub(r'(https?://[^\s?]+|/[^\s?]*)\?[^\s"\']+', r'\1?[REDACTED]', text)
         text = re.sub(r'(?i)(authorization\s*[:=]\s*)(?:bearer|basic)\s+[^\s,;]+', r'\1[REDACTED]', text)
         text = re.sub(
-            r'''(?ix)(["']?(?:password|passwd|secret_key|django_secret_key|token|api_key|cookie|sessionid|csrftoken)["']?\s*[:=]\s*)
+            r'''(?ix)(["']?(?:password|postgres_password|passwd|secret_key|django_secret_key|token|api_key|cookie|sessionid|csrftoken)["']?\s*[:=]\s*)
             (?:"[^"]*"|'[^']*'|[^\s,;]+)''',
             r'\1[REDACTED]', text,
         )

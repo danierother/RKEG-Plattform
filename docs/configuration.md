@@ -1,7 +1,9 @@
 # Konfiguration
 
-Die Plattform verwendet weiter Django 5.2 und SQLite. Es wurden keine
-Hostingkomponenten, Datenbanktreiber oder externen Pakete ergaenzt.
+Die Plattform verwendet Django 5.2 und lokal standardmaessig SQLite.
+PostgreSQL kann ausschliesslich ueber die Environment-Konfiguration aktiviert
+werden. `requirements.txt` enthaelt den vorgesehenen psycopg-Treiber; in diesem
+Konfigurationsschritt wurden keine Pakete installiert oder Daten uebertragen.
 `config/environment.py` liest ausschliesslich die Prozessumgebung. Eine `.env`
 wird **nicht automatisch geladen**. `.env.example` enthaelt nur einen
 absichtlich ungueltigen Schluesselplatzhalter, keine Zugangsdaten.
@@ -151,9 +153,66 @@ definieren und `MEDIA_URL`, Zugriffsschutz, Dateipruefung, Limits, Backup und
 Mandantenrechte gemeinsam planen. Vertrauliche Uploads nicht einfach oeffentlich
 ausliefern.
 
-Die bisherige SQLite-Konfiguration bleibt in ihrem eigenen `DATABASES`-Block.
-Ein spaeterer PostgreSQL-Schritt kann diesen Block gezielt ersetzen. Es gibt
-keinen `DATABASE_URL`-Parser, keine Datenmigration und keine Schemaaenderung.
+## Datenbankauswahl
+
+`config.environment.load_database()` erzeugt den `DATABASES`-Block ohne einen
+Treiber zu laden oder eine Verbindung aufzubauen. Die bisherigen
+Sicherheitseinstellungen gelten unabhaengig vom Datenbanktyp weiter.
+
+| Variable | Standard | Bedeutung |
+| --- | --- | --- |
+| `DJANGO_DB_ENGINE` | `sqlite` | `sqlite` oder `postgresql`; unbekannte oder leere Werte brechen den Start ab. |
+| `POSTGRES_DB` | Keiner | Datenbankname, bei PostgreSQL erforderlich. |
+| `POSTGRES_USER` | Keiner | DB-Benutzer, bei PostgreSQL erforderlich. |
+| `POSTGRES_PASSWORD` | Keiner | Nur ueber Environment; bei PostgreSQL erforderlich. |
+| `POSTGRES_HOST` | Keiner | DB-Host, bei PostgreSQL erforderlich. Auf diesem Testserver `127.0.0.1`. |
+| `POSTGRES_PORT` | `5432` | Ganzzahl zwischen 1 und 65535. |
+
+Lokale Entwicklung:
+
+```bash
+export DJANGO_DB_ENGINE=sqlite
+```
+
+Auch ohne diese Variable wird unveraendert `django.db.backends.sqlite3` mit
+`BASE_DIR / 'db.sqlite3'` verwendet. PostgreSQL-Variablen werden im SQLite-Modus
+nicht ausgewertet. Die Umschaltung veraendert oder kopiert keine Daten.
+
+Testserver (Konfigurationsschema; `<secret>` ist nur ein Platzhalter):
+
+```text
+DJANGO_DB_ENGINE=postgresql
+POSTGRES_DB=rkeg
+POSTGRES_USER=rkeg_app
+POSTGRES_PASSWORD=<secret>
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5432
+```
+
+Django und PostgreSQL laufen auf demselben Ubuntu-Testserver. **Der PostgreSQL-
+Port wird nicht oeffentlich geoeffnet.** PostgreSQL-Listener, `pg_hba.conf` und
+Firewall muessen diesen lokalen Zugriff passend absichern; diese
+Serverkonfiguration wird hier nicht veraendert. Der Passwortwert wird nur
+ueber die Prozessumgebung bereitgestellt, nicht im Quellcode oder in Befehlen
+mit echtem Passwort abgelegt. Eine `.env` wird weiterhin **nicht automatisch
+geladen**. Die vorhandenen privaten Environment-Variablen muessen dem
+Django-Prozess explizit uebergeben werden. `replace-me` in `.env.example` vor
+echter PostgreSQL-Nutzung ersetzen; es ist kein Passwortdefault des Codes.
+
+Fehlende oder nur aus Leerzeichen bestehende Pflichtwerte fuehren zu einer
+Konfigurationsfehlermeldung, die nur den Variablennamen nennt. Das Passwort
+wird unveraendert uebernommen, einschliesslich etwaiger Rand-Leerzeichen.
+Ein fehlender Port verwendet 5432; ein explizit leerer/ungueltiger Port wird
+abgewiesen. Es gibt keinen stillen Rueckfall von PostgreSQL auf SQLite.
+
+Die lokalen Settings-Tests simulieren PostgreSQL mit fluechtigen Dummy-Werten
+und blockierten Netzwerkverbindungen. Sie benoetigen keinen installierten
+PostgreSQL-Treiber und pruefen keine echte Anmeldung, Serverrechte oder
+PostgreSQL-spezifischen Fachabfragen. Ein spaeterer Testlauf gegen eine eigene
+isolierte PostgreSQL-Testdatenbank bleibt erforderlich. Nicht gegen eine
+Datenbank mit realen Daten testen; Django-Tests legen Testdatenbanken an.
+Es wurden keine Migrationen erzeugt/angewendet, keine SQLite-Daten kopiert und
+kein `DATABASE_URL`-Paket ergaenzt.
 
 ## Logging und Datenschutz
 
@@ -164,7 +223,8 @@ Anwendungsfehler koennen beispielsweise mit `logging.getLogger(__name__)`
 oder `logging.getLogger('rkeg')` erfasst werden. Keine E-Mail-Handler,
 Logdateien, SQL-Debugausgaben oder externen Dienste hinzugefuegt.
 
-Der Formatter maskiert bekannte Schluessel und `DEMO_PASSWORD`, gaengige
+Der Formatter maskiert bekannte Schluessel, `DEMO_PASSWORD` und
+`POSTGRES_PASSWORD` (auch das bereits in `DATABASES` geladene Passwort), gaengige
 Credential-Felder, Authorization-Tokens und URL-Querywerte auch in Tracebacks.
 Er erfasst keine lokalen Variablen. Request-Bodies, Cookies, Authorization,
 vollstaendige Settings und sensible Falldaten duerfen trotzdem niemals bewusst
