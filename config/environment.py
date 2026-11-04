@@ -21,6 +21,34 @@ def comma_list(env, name, default=''):
     return list(dict.fromkeys(part.strip() for part in env.get(name, default).split(',') if part.strip()))
 
 
+def load_database(env, base_dir):
+    engine = env.get('DJANGO_DB_ENGINE', 'sqlite').strip().lower()
+    if engine == 'sqlite':
+        return {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': base_dir / 'db.sqlite3'}}
+    if engine != 'postgresql':
+        raise ImproperlyConfigured('DJANGO_DB_ENGINE: sqlite oder postgresql angeben.')
+    values = {}
+    for name in ('POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_HOST'):
+        value = env.get(name, '')
+        if not value.strip():
+            raise ImproperlyConfigured(f'{name} muss bei DJANGO_DB_ENGINE=postgresql gesetzt sein.')
+        values[name] = value if name == 'POSTGRES_PASSWORD' else value.strip()
+    try:
+        port = int(env.get('POSTGRES_PORT', '5432'))
+    except ValueError:
+        raise ImproperlyConfigured('POSTGRES_PORT muss eine ganze Zahl zwischen 1 und 65535 sein.') from None
+    if not 1 <= port <= 65535:
+        raise ImproperlyConfigured('POSTGRES_PORT muss zwischen 1 und 65535 liegen.')
+    return {'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': values['POSTGRES_DB'],
+        'USER': values['POSTGRES_USER'],
+        'PASSWORD': values['POSTGRES_PASSWORD'],
+        'HOST': values['POSTGRES_HOST'],
+        'PORT': str(port),
+    }}
+
+
 def load_environment(env):
     debug = boolean(env, 'DJANGO_DEBUG', default=True)
     secret = env.get('DJANGO_SECRET_KEY', '')
