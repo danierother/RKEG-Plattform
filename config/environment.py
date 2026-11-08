@@ -93,6 +93,7 @@ def load_environment(env):
         'SECRET_KEY_FROM_ENV': configured,
         'ALLOWED_HOSTS': hosts,
         'CSRF_TRUSTED_ORIGINS': origins,
+        'SECURE_PROXY_SSL_HEADER': ('HTTP_X_FORWARDED_PROTO', 'https'),
         'SECURE_SSL_REDIRECT': secure,
         'SESSION_COOKIE_SECURE': secure,
         'CSRF_COOKIE_SECURE': secure,
